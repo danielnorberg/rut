@@ -4,6 +4,8 @@ import java.util.List;
 
 public class RadixTrie<T> {
 
+  private static final char NUL = '\0';
+
   private final Node<T> root;
 
   public RadixTrie(final Node<T> root) {
@@ -11,7 +13,8 @@ public class RadixTrie<T> {
   }
 
   public T lookup(final CharSequence s) {
-    return root.lookup(s, 0);
+    final char c = s.length() == 0 ? NUL : s.charAt(0);
+    return root.lookup(c, s, 0);
   }
 
   public static <T> Builder<T> builder(final Class<T> clazz) {
@@ -19,8 +22,6 @@ public class RadixTrie<T> {
   }
 
   public static class Node<T> {
-
-    private static final char EMPTY = '\0';
 
     private final char first;
     private final char[] tail;
@@ -32,7 +33,7 @@ public class RadixTrie<T> {
 
     public Node(final String prefix, final Node<T> capture,
                 final List<Node<T>> children, final T value) {
-      this.first = (prefix.length() == 0) ? EMPTY : prefix.charAt(0);
+      this.first = (prefix.length() == 0) ? NUL : prefix.charAt(0);
       this.tail = (prefix.length() > 1) ? prefix.substring(1).toCharArray() : null;
       this.capture = capture;
       this.child1 = children.size() > 0 ? children.get(0) : null;
@@ -46,37 +47,35 @@ public class RadixTrie<T> {
       return children.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[children.size()]);
     }
 
-    public T lookup(final CharSequence s, final int index) {
-      if (!matchPrefix(s, index)) {
+    public T lookup(final char c, final CharSequence s, final int index) {
+      if (!matchPrefix(c, s, index)) {
         return null;
       }
-      final int newIndex = index + length();
-      if (newIndex == s.length()) {
+      final int nextIndex = index + length();
+      if (nextIndex == s.length()) {
         return value;
       }
-      final T childMatch = lookupChildren(s, newIndex);
+      final char nextC = s.charAt(nextIndex);
+      final T childMatch = lookupChildren(nextC, s, nextIndex);
       if (childMatch != null) {
         return childMatch;
       }
-      return lookupCapture(s, newIndex);
+      return lookupCapture(s, nextIndex);
     }
 
     private int length() {
       if (tail != null) {
         return 1 + tail.length;
       } else {
-        return (first == EMPTY) ? 0 : 1;
+        return (first == NUL) ? 0 : 1;
       }
     }
 
-    private boolean matchPrefix(final CharSequence s, final int index) {
-      if (first == EMPTY) {
-        return true;
-      }
-      if (index >= s.length()) {
+    private boolean matchPrefix(final char c, final CharSequence s, final int index) {
+      if (first != c) {
         return false;
       }
-      if (s.charAt(index) != first) {
+      if (index >= s.length()) {
         return false;
       }
       if (tail == null) {
@@ -99,7 +98,8 @@ public class RadixTrie<T> {
       }
       final int maxCapture = indexOf(s, newIndex, '/') - 1;
       for (int i = maxCapture; i >= newIndex; i--) {
-        final T value = capture.lookup(s, i);
+        final char c = s.charAt(i);
+        final T value = capture.lookup(c, s, i);
         if (value != null) {
           return value;
         }
@@ -107,22 +107,22 @@ public class RadixTrie<T> {
       return null;
     }
 
-    private T lookupChildren(final CharSequence s, final int newIndex) {
+    private T lookupChildren(final char c, final CharSequence s, final int newIndex) {
       if (child1 != null) {
-        final T value = child1.lookup(s, newIndex);
+        final T value = child1.lookup(c, s, newIndex);
         if (value != null) {
           return value;
         }
       }
       if (child2 != null) {
-        final T value = child2.lookup(s, newIndex);
+        final T value = child2.lookup(c, s, newIndex);
         if (value != null) {
           return value;
         }
       }
       if (children != null) {
         for (final Node<T> child : children) {
-          final T value = child.lookup(s, newIndex);
+          final T value = child.lookup(c, s, newIndex);
           if (value != null) {
             return value;
           }
@@ -143,7 +143,7 @@ public class RadixTrie<T> {
 
     @Override
     public String toString() {
-      return "Node{'" + (first == EMPTY ? "" : String.valueOf(first)) +
+      return "Node{'" + (first == NUL ? "" : String.valueOf(first)) +
                         (tail == null ? "" : new String(tail)) + "\':" +
              ", d=" + ((capture == null ? 0 : 1) +
                        (child1 == null ? 0 : 1) +

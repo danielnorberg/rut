@@ -155,7 +155,7 @@ public class RegexBenchmark {
             .include(".*" + RegexBenchmark.class.getSimpleName() + ".*testRadixTrieURIRouting.*")
             .warmupIterations(5)
             .measurementIterations(20)
-            .forks(5)
+            .forks(1)
             .build();
 
         new Runner(opt).run();
