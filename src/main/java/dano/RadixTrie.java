@@ -1,7 +1,5 @@
 package dano;
 
-import java.util.List;
-
 public class RadixTrie<T> {
 
   private final Node<T> root;
@@ -21,12 +19,12 @@ public class RadixTrie<T> {
   public static class Node<T> {
 
     private final String prefix;
-    private final List<Node<T>> children;
+    private final Node<T>[] children;
     private final Node<T> capture;
     private final T value;
 
     public Node(final String prefix, final Node<T> capture,
-                final List<Node<T>> children, final T value) {
+                final Node<T>[] children, final T value) {
 
       this.prefix = prefix;
       this.capture = capture;
@@ -78,8 +76,7 @@ public class RadixTrie<T> {
     }
 
     private T lookupChildren(final CharSequence s, final int newIndex) {
-      for (int i = 0; i < children.size(); i++) {
-        final Node<T> child = children.get(i);
+      for (final Node<T> child : children) {
         final T value = child.lookup(s, newIndex);
         if (value != null) {
           return value;
@@ -102,7 +99,7 @@ public class RadixTrie<T> {
     public String toString() {
       return "Node{" +
              "prefix='" + prefix + '\'' +
-             ", children=" + children.size() +
+             ", children=" + children.length +
              ", capture=" + (capture != null) +
              ", value=" + value +
              '}';

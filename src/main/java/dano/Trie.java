@@ -102,7 +102,12 @@ public class Trie<T> {
       for (final Edge<T> child : tail.children) {
         children.add(child.compress());
       }
-      return new RadixTrie.Node<T>(prefix.toString(), capture, children, value);
+      return new RadixTrie.Node<T>(prefix.toString(), capture, toArray(children), value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> RadixTrie.Node<T>[] toArray(final List<RadixTrie.Node<T>> children) {
+      return children.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[children.size()]);
     }
 
     private void append(final StringBuilder prefix, final Node<T> start, final Node<T> end) {
