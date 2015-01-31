@@ -42,8 +42,11 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.nio.CharBuffer;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.Arrays.asList;
 
 @State(Scope.Thread)
 public class RegexBenchmark {
@@ -60,9 +63,40 @@ public class RegexBenchmark {
     public static final SimplePattern2 SIMPLE_PATTERN2 = SimplePattern2.of("pre-<data>-post");
     public static final SimplePattern2.Result SIMPLE_PATTERN2_RESULT = SIMPLE_PATTERN2.result();
 
+    public static final RadixTrie<String> RADIX_TRIE = RadixTrie.builder(String.class)
+        .insert("/usercount", "usercount")
+        .insert("/users", "users")
+        .insert("/users/<user>", "user")
+        .insert("/users/<user>/playlistcount", "user-playlistcount")
+        .insert("/users/<user>/playlists", "user-playlists")
+        .insert("/users/<user>/playlists/<playlist>/itemcount", "user-playlist-itemcount")
+        .insert("/users/<user>/playlists/<playlist>/items", "user-playlist-items")
+        .insert("/users/<user>/playlists/<playlist>/items/<item>", "user-playlist-item")
+        .insert("/users/<user>/playlists/<playlist>", "user-playlist")
+        .build();
+
+    public static final List<Pattern> URI_PATTERNS = asList(
+        Pattern.compile("/usercount"),
+        Pattern.compile("/users"),
+        Pattern.compile("/users/([^/]*)"),
+        Pattern.compile("/users/([^/]*)/playlistcount"),
+        Pattern.compile("/users/([^/]*)/playlists"),
+        Pattern.compile("/users/([^/]*)/playlists/([^/]*)/itemcount"),
+        Pattern.compile("/users/([^/]*)/playlists/([^/]*)/items"),
+        Pattern.compile("/users/([^/]*)/playlists/([^/]*)/items/([^/]*)"),
+        Pattern.compile("/users/([^/]*)/playlists/([^/]*)")
+    );
+
+    public static final String RADIX_TRIE_TEST_PATH = "/users/foo-user/playlists/bar-playlist";
+
+    private String uri;
+    private List<Pattern> uriPatterns;
+
     @Setup
     public void setup() {
         haystackSequence = CharBuffer.wrap(haystack);
+        uri = RADIX_TRIE_TEST_PATH;
+        uriPatterns = URI_PATTERNS;
     }
 
     @Benchmark
@@ -101,11 +135,27 @@ public class RegexBenchmark {
         return SIMPLE_PATTERN2_RESULT.value(haystackSequence, 0);
     }
 
+    @Benchmark
+    public CharSequence testRadixTrieURIRouting() {
+        return RADIX_TRIE.lookup(uri);
+    }
+
+    @Benchmark
+    public Pattern testRegexURIRouting() {
+        for (int i = 0; i < uriPatterns.size(); i++) {
+            final Pattern pattern = uriPatterns.get(i);
+            if (pattern.matcher(uri).matches()) {
+                return pattern;
+            }
+        }
+        return null;
+    }
+
     public static void main(final String... args) throws RunnerException {
         Options opt = new OptionsBuilder()
-            .include(".*" + RegexBenchmark.class.getSimpleName() + ".*testSimple2ReusableOutput.*")
+            .include(".*" + RegexBenchmark.class.getSimpleName() + ".*Routing.*")
             .warmupIterations(5)
-            .measurementIterations(500)
+            .measurementIterations(5)
             .forks(0)
             .build();
 
