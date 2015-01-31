@@ -20,7 +20,10 @@ public class RadixTrie<T> {
 
   public static class Node<T> {
 
-    private final char[] prefix;
+    private static final char EMPTY = '\0';
+
+    private final char first;
+    private final char[] tail;
     private final Node<T> child1;
     private final Node<T> child2;
     private final Node<T>[] children;
@@ -29,8 +32,8 @@ public class RadixTrie<T> {
 
     public Node(final String prefix, final Node<T> capture,
                 final List<Node<T>> children, final T value) {
-
-      this.prefix = prefix.toCharArray();
+      this.first = (prefix.length() == 0) ? EMPTY : prefix.charAt(0);
+      this.tail = (prefix.length() > 1) ? prefix.substring(1).toCharArray() : null;
       this.capture = capture;
       this.child1 = children.size() > 0 ? children.get(0) : null;
       this.child2 = children.size() > 1 ? children.get(1) : null;
@@ -47,7 +50,7 @@ public class RadixTrie<T> {
       if (!matchPrefix(s, index)) {
         return null;
       }
-      final int newIndex = index + prefix.length;
+      final int newIndex = index + length();
       if (newIndex == s.length()) {
         return value;
       }
@@ -58,12 +61,32 @@ public class RadixTrie<T> {
       return lookupCapture(s, newIndex);
     }
 
+    private int length() {
+      if (tail != null) {
+        return 1 + tail.length;
+      } else {
+        return (first == EMPTY) ? 0 : 1;
+      }
+    }
+
     private boolean matchPrefix(final CharSequence s, final int index) {
-      if (prefix.length + index > s.length()) {
+      if (first == EMPTY) {
+        return true;
+      }
+      if (index >= s.length()) {
         return false;
       }
-      for (int i = 0; i < prefix.length; i++) {
-        if (prefix[i] != s.charAt(index + i)) {
+      if (s.charAt(index) != first) {
+        return false;
+      }
+      if (tail == null) {
+        return true;
+      }
+      if (index + 1 + tail.length > s.length()) {
+        return false;
+      }
+      for (int i = 0; i < tail.length; i++) {
+        if (tail[i] != s.charAt(1 + index + i)) {
           return false;
         }
       }
@@ -120,7 +143,8 @@ public class RadixTrie<T> {
 
     @Override
     public String toString() {
-      return "Node{'" + new String(prefix) + "\':" +
+      return "Node{'" + (first == EMPTY ? "" : String.valueOf(first)) +
+                        (tail == null ? "" : new String(tail)) + "\':" +
              ", d=" + ((capture == null ? 0 : 1) +
                        (child1 == null ? 0 : 1) +
                        (child2 == null ? 0 : 1) +
