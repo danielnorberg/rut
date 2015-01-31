@@ -154,8 +154,8 @@ public class RegexBenchmark {
         Options opt = new OptionsBuilder()
             .include(".*" + RegexBenchmark.class.getSimpleName() + ".*testRadixTrieURIRouting.*")
             .warmupIterations(5)
-            .measurementIterations(5)
-            .forks(1)
+            .measurementIterations(20)
+            .forks(5)
             .build();
 
         new Runner(opt).run();
