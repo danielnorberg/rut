@@ -153,10 +153,10 @@ public class RegexBenchmark {
 
     public static void main(final String... args) throws RunnerException {
         Options opt = new OptionsBuilder()
-            .include(".*" + RegexBenchmark.class.getSimpleName() + ".*Routing.*")
+            .include(".*" + RegexBenchmark.class.getSimpleName() + ".*testRadixTrieURIRouting.*")
             .warmupIterations(5)
             .measurementIterations(5)
-            .forks(0)
+            .forks(1)
             .build();
 
         new Runner(opt).run();
