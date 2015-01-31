@@ -122,11 +122,13 @@ public class RadixTrie<T> {
 
     @Override
     public String toString() {
-      return "Node{" +
-             "prefix='" + prefix + '\'' +
-             ", children=" + children.length +
-             ", capture=" + (capture != null) +
-             ", value=" + value +
+      return "Node{'" + prefix + "\':" +
+             ", d=" + ((capture == null ? 0 : 1) +
+                       (child1 == null ? 0 : 1) +
+                       (child2 == null ? 0 : 1) +
+                       (children == null ? 0 : children.length)) +
+             ", c=" + (capture != null) +
+             ", v=" + value +
              '}';
     }
   }
