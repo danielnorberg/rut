@@ -51,7 +51,6 @@ import static java.util.Arrays.asList;
 @State(Scope.Thread)
 public class RegexBenchmark {
 
-
     @Param({"pre-data-with-dash-post"})
     public String haystack;
 

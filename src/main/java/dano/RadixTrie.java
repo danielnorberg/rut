@@ -1,5 +1,7 @@
 package dano;
 
+import java.util.List;
+
 public class RadixTrie<T> {
 
   private final Node<T> root;
@@ -19,17 +21,26 @@ public class RadixTrie<T> {
   public static class Node<T> {
 
     private final String prefix;
+    private final Node<T> child1;
+    private final Node<T> child2;
     private final Node<T>[] children;
     private final Node<T> capture;
     private final T value;
 
     public Node(final String prefix, final Node<T> capture,
-                final Node<T>[] children, final T value) {
+                final List<Node<T>> children, final T value) {
 
       this.prefix = prefix;
       this.capture = capture;
-      this.children = children;
+      this.child1 = children.size() > 0 ? children.get(0) : null;
+      this.child2 = children.size() > 1 ? children.get(1) : null;
+      this.children = children.size() > 2 ? toArray(children.subList(2, children.size())) : null;
       this.value = value;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> RadixTrie.Node<T>[] toArray(final List<RadixTrie.Node<T>> children) {
+      return children.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[children.size()]);
     }
 
     public T lookup(final CharSequence s, final int index) {
@@ -76,10 +87,24 @@ public class RadixTrie<T> {
     }
 
     private T lookupChildren(final CharSequence s, final int newIndex) {
-      for (final Node<T> child : children) {
-        final T value = child.lookup(s, newIndex);
+      if (child1 != null) {
+        final T value = child1.lookup(s, newIndex);
         if (value != null) {
           return value;
+        }
+      }
+      if (child2 != null) {
+        final T value = child2.lookup(s, newIndex);
+        if (value != null) {
+          return value;
+        }
+      }
+      if (children != null) {
+        for (final Node<T> child : children) {
+          final T value = child.lookup(s, newIndex);
+          if (value != null) {
+            return value;
+          }
         }
       }
       return null;
