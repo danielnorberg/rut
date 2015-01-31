@@ -20,7 +20,7 @@ public class RadixTrie<T> {
 
   public static class Node<T> {
 
-    private final String prefix;
+    private final char[] prefix;
     private final Node<T> child1;
     private final Node<T> child2;
     private final Node<T>[] children;
@@ -30,7 +30,7 @@ public class RadixTrie<T> {
     public Node(final String prefix, final Node<T> capture,
                 final List<Node<T>> children, final T value) {
 
-      this.prefix = prefix;
+      this.prefix = prefix.toCharArray();
       this.capture = capture;
       this.child1 = children.size() > 0 ? children.get(0) : null;
       this.child2 = children.size() > 1 ? children.get(1) : null;
@@ -47,7 +47,7 @@ public class RadixTrie<T> {
       if (!matchPrefix(s, index)) {
         return null;
       }
-      final int newIndex = index + prefix.length();
+      final int newIndex = index + prefix.length;
       if (newIndex == s.length()) {
         return value;
       }
@@ -59,13 +59,11 @@ public class RadixTrie<T> {
     }
 
     private boolean matchPrefix(final CharSequence s, final int index) {
-      if (prefix.length() + index > s.length()) {
+      if (prefix.length + index > s.length()) {
         return false;
       }
-      for (int i = 0; i < prefix.length(); i++) {
-        final char a = prefix.charAt(i);
-        final char b = s.charAt(index + i);
-        if (a != b) {
+      for (int i = 0; i < prefix.length; i++) {
+        if (prefix[i] != s.charAt(index + i)) {
           return false;
         }
       }
@@ -122,7 +120,7 @@ public class RadixTrie<T> {
 
     @Override
     public String toString() {
-      return "Node{'" + prefix + "\':" +
+      return "Node{'" + new String(prefix) + "\':" +
              ", d=" + ((capture == null ? 0 : 1) +
                        (child1 == null ? 0 : 1) +
                        (child2 == null ? 0 : 1) +
