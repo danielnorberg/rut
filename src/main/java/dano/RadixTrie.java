@@ -3,6 +3,8 @@ package dano;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public final class RadixTrie<T> {
 
   private static final char NUL = '\0';
@@ -29,8 +31,10 @@ public final class RadixTrie<T> {
     return new Captor(captures);
   }
 
-  public T lookup(final CharSequence s, final Captor captor) {
-    captor.reset();
+  public T lookup(final CharSequence s, @Nullable final Captor captor) {
+    if (captor != null) {
+      captor.reset();
+    }
     final char c = s.length() == 0 ? NUL : s.charAt(0);
     if (c != head) {
       return null;
@@ -86,7 +90,7 @@ public final class RadixTrie<T> {
       return edges.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[edges.size()]);
     }
 
-    T lookup(final CharSequence s, final int index, final Captor captor, final int capture) {
+    T lookup(final CharSequence s, final int index, @Nullable final Captor captor, final int capture) {
       final int next = match(s, index);
       if (next == -1) {
         return null;
@@ -124,7 +128,7 @@ public final class RadixTrie<T> {
       return index + tail.length;
     }
 
-    private T capture(final CharSequence s, final int index, final Captor captor,
+    private T capture(final CharSequence s, final int index, @Nullable final Captor captor,
                       final int capture) {
       if (this.capture == null) {
         return null;
@@ -157,7 +161,7 @@ public final class RadixTrie<T> {
     }
 
     private T descend(final char c, final CharSequence s, final int next,
-                      final Captor captor, final int capture) {
+                      @Nullable final Captor captor, final int capture) {
       if (edge1 != null && head1 == c) {
         final T value = edge1.lookup(s, next + 1, captor, capture);
         if (value != null) {

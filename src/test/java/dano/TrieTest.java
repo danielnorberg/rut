@@ -46,6 +46,8 @@ public class TrieTest {
         final String expectedValue = matcher.group();
         final String value = captor.value(entry.getKey(), i).toString();
         assertThat(value, is(expectedValue));
+        assertThat(captor.valueStart(i), is(matcher.start()));
+        assertThat(captor.valueEnd(i), is(matcher.end()));
         i++;
       }
     }
