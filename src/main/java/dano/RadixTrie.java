@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 public final class RadixTrie<T> {
 
   private static final char NUL = '\0';
+  private static final char SLASH = '/';
 
   private final Node<T> root;
   private final int captures;
@@ -74,21 +75,28 @@ public final class RadixTrie<T> {
 
     T lookup(final CharSequence s, final int index, @Nullable final Captor captor,
              final int capture) {
+      // Match prefix
       final int next = match(s, index);
       if (next == -1) {
         return null;
       }
       assert next >= index;
+
+      // Terminal?
       if (next == s.length()) {
         if (captor != null) {
           captor.match(capture);
         }
         return value;
       }
-      final T value = descend(s, next, captor, capture);
+
+      // Edges
+      final T value = fanout(s, next, captor, capture);
       if (value != null) {
         return value;
       }
+
+      // Capture
       return capture(s, next, captor, capture);
     }
 
@@ -116,12 +124,25 @@ public final class RadixTrie<T> {
       return index + 1 + tail.length;
     }
 
+    private T fanout(final CharSequence s, final int next, @Nullable final Captor captor,
+                     final int capture) {
+      Node<T> edge = this.edge;
+      while (edge != null) {
+        final T value = edge.lookup(s, next, captor, capture);
+        if (value != null) {
+          return value;
+        }
+        edge = edge.sibling;
+      }
+      return null;
+    }
+
     private T capture(final CharSequence s, final int index, @Nullable final Captor captor,
                       final int capture) {
       if (this.capture == null) {
         return null;
       }
-      final int limit = seek(s, index, '/');
+      final int limit = bound(s, index);
       for (int i = limit; i >= index; i--) {
         final T value = this.capture.lookup(s, i, captor, capture + 1);
         if (value != null) {
@@ -134,23 +155,10 @@ public final class RadixTrie<T> {
       return null;
     }
 
-    private T descend(final CharSequence s, final int next, @Nullable final Captor captor,
-                      final int capture) {
-      Node<T> edge = this.edge;
-      while (edge != null) {
-        final T value = edge.lookup(s, next, captor, capture);
-        if (value != null) {
-          return value;
-        }
-        edge = edge.sibling;
-      }
-      return null;
-    }
-
-    private int seek(final CharSequence s, final int start, final char c) {
+    private int bound(final CharSequence s, final int start) {
       int i = start;
       for (; i < s.length(); i++) {
-        if (s.charAt(i) == c) {
+        if (s.charAt(i) == SLASH) {
           return i;
         }
       }
@@ -159,24 +167,26 @@ public final class RadixTrie<T> {
 
     @Override
     public String toString() {
-      return "Node{'" + ((head == NUL ? "" : String.valueOf(head)) +
-                         (tail == null ? "" : new String(tail))) + "\':" +
-             ", e=" + edgesToString() +
-             ", c=" + (capture == null ? "" : capture.head == NUL ? "" : "'" + capture.head + "'") +
-             ", v=" + value +
+      return "Node{'" + prefix() + "\':" +
+             ", e=" + edgePrefixes() +
+             ", c=" + (capture == null ? "" : capture.prefix() + "'") +
+             ", v=" + (value == null ? "" : value.toString()) +
              '}';
     }
 
-    private String edgesToString() {
-      final List<String> chars = new ArrayList<String>();
+    private String edgePrefixes() {
+      final List<String> edgeStrings = new ArrayList<String>();
       Node<T> edge = this.edge;
       while (edge != null) {
-        chars.add(edge.head == NUL ? "" : String.valueOf(edge.head));
+        edgeStrings.add(edge.prefix());
         edge = edge.sibling;
       }
-      return chars.toString();
+      return edgeStrings.toString();
     }
 
+    private String prefix() {
+      return head == NUL ? "" : String.valueOf(head) + ((tail == null) ? "" : String.valueOf(tail));
+    }
   }
 
   @Override
