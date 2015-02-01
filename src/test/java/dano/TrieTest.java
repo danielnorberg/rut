@@ -81,4 +81,14 @@ public class TrieTest {
     assertThat(rdx.lookup("/foo/2"), is("2"));
   }
 
+  @Test
+  public void testMultipleRoots() {
+    final Trie<String> trie = new Trie<String>();
+    trie.insert("a", "a");
+    trie.insert("b", "b");
+    final RadixTrie<String> rdx = trie.compress();
+    assertThat(rdx.lookup("a"), is("a"));
+    assertThat(rdx.lookup("b"), is("b"));
+  }
+
 }

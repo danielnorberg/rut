@@ -143,13 +143,17 @@ public final class RadixTrie<T> {
       }
       final int limit = bound(path, index);
       for (int i = limit; i >= index; i--) {
-        final T value = this.capture.lookup(path, i, captor, capture + 1);
-        if (value != null) {
-          if (captor != null) {
-            captor.capture(capture, index, i);
+        Node<T> node = this.capture;
+        do {
+          final T value = node.lookup(path, i, captor, capture + 1);
+          if (value != null) {
+            if (captor != null) {
+              captor.capture(capture, index, i);
+            }
+            return value;
           }
-          return value;
-        }
+          node = node.sibling;
+        } while (node != null);
       }
       return null;
     }
