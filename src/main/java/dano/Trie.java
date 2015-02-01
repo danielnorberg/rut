@@ -94,28 +94,34 @@ class Trie<T> {
 
     private RadixTrie.Node<T> compress(final StringBuilder prefix,
                                        final RadixTrie.Node<T> sibling) {
+      // Compute compressed prefix
       final Node<T> tail = tail();
       append(prefix, this, tail);
-      final T value = tail.value;
+
+      // Create capture node
       final RadixTrie.Node<T> capture;
       if (tail.capture == null) {
         capture = null;
       } else {
         RadixTrie.Node<T> node = null;
         if (tail.capture.value != null) {
-          // Capture terminal node
+          // Terminal capture node
           node = new RadixTrie.Node<T>("", null, null, null, tail.capture.value);
         }
+        // Capture suffix branches
         for (final Node<T> root : tail.capture.edges) {
           node = root.compress(new StringBuilder().append(root.c), node);
         }
         capture = node;
       }
+
+      // Suffix branches
       RadixTrie.Node<T> edge = null;
       for (final Node<T> e : tail.edges) {
         edge = e.compress(new StringBuilder().append(e.c), edge);
       }
-      return new RadixTrie.Node<T>(prefix.toString(), sibling, edge, capture, value);
+
+      return new RadixTrie.Node<T>(prefix.toString(), sibling, edge, capture, tail.value);
     }
 
     private void append(final StringBuilder prefix, final Node<T> start, final Node<T> end) {
