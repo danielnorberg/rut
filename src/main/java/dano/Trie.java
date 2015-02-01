@@ -16,7 +16,7 @@ public class Trie<T> {
 
   public RadixTrie<T> compress() {
     final char head = head(prefix(root, new StringBuilder()));
-    return new RadixTrie<T>(head, root.compress(new StringBuilder()));
+    return new RadixTrie<T>(head, root.compress(new StringBuilder()), root.captures(0));
   }
 
   private static char head(final CharSequence prefix) {
@@ -151,6 +151,14 @@ public class Trie<T> {
              ", children=" + children.size() +
              ", value=" + value +
              '}';
+    }
+
+    public int captures(final int captures) {
+      int max = (capture == null) ? captures : capture.node.captures(captures + 1);
+      for (final Edge<T> child : children) {
+        max = Math.max(max, child.node.captures(captures));
+      }
+      return max;
     }
   }
 

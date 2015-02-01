@@ -55,15 +55,20 @@ public final class RadixTrie<T> {
 
   private final char head;
   private final Node<T> root;
+  private final int captures;
 
-  RadixTrie(final char head, final Node<T> root) {
+  RadixTrie(final char head, final Node<T> root, final int captures) {
     this.head = head;
     this.root = root;
+    this.captures = captures;
+  }
+
+  public int captures() {
+    return captures;
   }
 
   public Captor lookup() {
-    // TODO (dano): store max num of captures
-    return new Captor(64);
+    return new Captor(captures);
   }
 
   public T lookup(final CharSequence s, final Captor captor) {
