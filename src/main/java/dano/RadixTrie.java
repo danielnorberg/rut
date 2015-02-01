@@ -18,16 +18,8 @@ public final class RadixTrie<T> {
     this.captures = captures;
   }
 
-  public int captures() {
-    return captures;
-  }
-
-  public Captor captor() {
-    return captor(captures);
-  }
-
-  public static Captor captor(final int captures) {
-    return new Captor(captures);
+  public T lookup(final CharSequence s) {
+    return lookup(s, null);
   }
 
   public T lookup(final CharSequence s, @Nullable final Captor captor) {
@@ -45,8 +37,16 @@ public final class RadixTrie<T> {
     return null;
   }
 
-  public T lookup(final CharSequence s) {
-    return lookup(s, null);
+  public int captures() {
+    return captures;
+  }
+
+  public Captor captor() {
+    return captor(captures);
+  }
+
+  public static Captor captor(final int captures) {
+    return new Captor(captures);
   }
 
   public static <T> Builder<T> builder(final Class<T> clazz) {
