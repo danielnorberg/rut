@@ -5,52 +5,6 @@ import java.util.List;
 
 public final class RadixTrie<T> {
 
-  public static final class Captor {
-
-    private final int[] start;
-    private final int[] end;
-    private boolean match;
-    private int values;
-
-    public Captor(final int maxValues) {
-      this.start = new int[maxValues];
-      this.end = new int[maxValues];
-    }
-
-    public void reset() {
-      match = false;
-      values = 0;
-    }
-
-    void capture(final int i, final int start, final int end) {
-      this.start[i] = start;
-      this.end[i] = end;
-    }
-
-    void match(final int values) {
-      match = true;
-      this.values = values;
-    }
-
-    public boolean isMatch() {
-      return match;
-    }
-
-    public int values() {
-      return values;
-    }
-
-    public CharSequence value(final CharSequence haystack, final int i) {
-      if (!match) {
-        throw new IllegalStateException("not matched");
-      }
-      if (i > values) {
-        throw new IndexOutOfBoundsException();
-      }
-      return haystack.subSequence(start[i], end[i]);
-    }
-  }
-
   private static final char NUL = '\0';
 
   private final char head;
@@ -68,6 +22,10 @@ public final class RadixTrie<T> {
   }
 
   public Captor captor() {
+    return captor(captures);
+  }
+
+  public static Captor captor(final int captures) {
     return new Captor(captures);
   }
 
