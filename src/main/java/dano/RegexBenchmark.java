@@ -134,9 +134,11 @@ public class RegexBenchmark {
         return SIMPLE_PATTERN2_RESULT.value(haystackSequence, 0);
     }
 
+    static RadixTrie.Captor Captor = new RadixTrie.Captor(64);
+
     @Benchmark
     public CharSequence testRadixTrieURIRouting() {
-        return RADIX_TRIE.lookup(uri);
+        return RADIX_TRIE.lookup(uri, Captor);
     }
 
     @Benchmark

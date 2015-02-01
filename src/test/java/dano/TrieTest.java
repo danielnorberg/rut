@@ -5,6 +5,8 @@ import org.junit.Test;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -13,6 +15,7 @@ public class TrieTest {
 
   @Test
   public void testRealURIMap() {
+    final Pattern capture = Pattern.compile("<[^>]+>");
     final Map<String, String> routes = new LinkedHashMap<String, String>();
     routes.put("/usercount", "usercount");
     routes.put("/users", "users");
@@ -29,12 +32,21 @@ public class TrieTest {
       builder.insert(entry.getKey(), entry.getValue());
     }
     final RadixTrie<String> rdx = builder.build();
+    final RadixTrie.Captor captor = rdx.lookup();
     for (final Map.Entry<String, String> entry : routes.entrySet()) {
-      if(!Objects.equals(rdx.lookup(entry.getKey()), entry.getValue())) {
-        final String value = rdx.lookup(entry.getKey());
+      if (!Objects.equals(rdx.lookup(entry.getKey(), captor), entry.getValue())) {
+        final String value = rdx.lookup(entry.getKey(), captor);
         System.out.println("mismatch: " + entry.getKey() + " -> " + value);
       }
-      assertThat(rdx.lookup(entry.getKey()), is(entry.getValue()));
+      assertThat(rdx.lookup(entry.getKey(), captor), is(entry.getValue()));
+      final Matcher matcher = capture.matcher(entry.getKey());
+      int i = 0;
+      while (matcher.find()) {
+        final String expectedValue = matcher.group();
+        final String value = captor.value(entry.getKey(), i).toString();
+        assertThat(value, is(expectedValue));
+        i++;
+      }
     }
   }
 
