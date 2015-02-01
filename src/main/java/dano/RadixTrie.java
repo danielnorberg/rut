@@ -51,14 +51,13 @@ public final class RadixTrie<T> {
     }
   }
 
-
   private static final char NUL = '\0';
 
-  private final char first;
+  private final char head;
   private final Node<T> root;
 
-  public RadixTrie(final char first, final Node<T> root) {
-    this.first = first;
+  RadixTrie(final char head, final Node<T> root) {
+    this.head = head;
     this.root = root;
   }
 
@@ -70,7 +69,7 @@ public final class RadixTrie<T> {
   public T lookup(final CharSequence s, final Captor captor) {
     captor.reset();
     final char c = s.length() == 0 ? NUL : s.charAt(0);
-    if (c != first) {
+    if (c != head) {
       return null;
     }
     return root.lookup(s, 1, captor, 0);
