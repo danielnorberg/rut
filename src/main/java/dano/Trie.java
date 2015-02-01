@@ -28,7 +28,7 @@ class Trie<T> {
     RadixTrie.Node<T> node = null;
     int captures = 0;
     for (final Node<T> root : roots) {
-      node = root.compress(new StringBuilder().append(root.c), node);
+      node = root.compress(node);
       captures = Math.max(captures, root.captures(0));
     }
     return new RadixTrie<T>(node, captures);
@@ -92,10 +92,10 @@ class Trie<T> {
       return new Node<T>(c);
     }
 
-    private RadixTrie.Node<T> compress(final StringBuilder prefix,
-                                       final RadixTrie.Node<T> sibling) {
+    private RadixTrie.Node<T> compress(final RadixTrie.Node<T> sibling) {
       // Compute compressed prefix
       final Node<T> tail = tail();
+      final StringBuilder prefix = new StringBuilder();
       append(prefix, this, tail);
 
       // Create capture node
@@ -110,7 +110,7 @@ class Trie<T> {
         }
         // Capture suffix branches
         for (final Node<T> root : tail.capture.edges) {
-          node = root.compress(new StringBuilder().append(root.c), node);
+          node = root.compress(node);
         }
         capture = node;
       }
@@ -118,7 +118,7 @@ class Trie<T> {
       // Suffix branches
       RadixTrie.Node<T> edge = null;
       for (final Node<T> e : tail.edges) {
-        edge = e.compress(new StringBuilder().append(e.c), edge);
+        edge = e.compress(edge);
       }
 
       return new RadixTrie.Node<T>(prefix.toString(), sibling, edge, capture, tail.value);
@@ -126,9 +126,12 @@ class Trie<T> {
 
     private void append(final StringBuilder prefix, final Node<T> start, final Node<T> end) {
       Node<T> node = start;
-      while (node != end) {
-        node = node.edges.get(0);
+      while (true) {
         prefix.append(node.c);
+        if (node == end) {
+          return;
+        }
+        node = node.edges.get(0);
       }
     }
 
