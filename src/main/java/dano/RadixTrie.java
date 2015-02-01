@@ -67,7 +67,7 @@ public final class RadixTrie<T> {
     return captures;
   }
 
-  public Captor lookup() {
+  public Captor captor() {
     return new Captor(captures);
   }
 

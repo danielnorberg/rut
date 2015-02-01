@@ -33,7 +33,7 @@ public class TrieTest {
     }
     final RadixTrie<String> rdx = builder.build();
     assertThat(rdx.captures(), is(3));
-    final RadixTrie.Captor captor = rdx.lookup();
+    final RadixTrie.Captor captor = rdx.captor();
     for (final Map.Entry<String, String> entry : routes.entrySet()) {
       if (!Objects.equals(rdx.lookup(entry.getKey(), captor), entry.getValue())) {
         final String value = rdx.lookup(entry.getKey(), captor);
