@@ -72,6 +72,9 @@ public class RadixTrie<T> {
     }
 
     private boolean matchPrefix(final char c, final CharSequence s, final int index) {
+      if (first == NUL) {
+        return true;
+      }
       if (first != c) {
         return false;
       }
@@ -96,9 +99,10 @@ public class RadixTrie<T> {
       if (capture == null) {
         return null;
       }
-      final int maxCapture = indexOf(s, newIndex, '/') - 1;
-      for (int i = maxCapture; i >= newIndex; i--) {
-        final char c = s.charAt(i);
+      final int length = s.length();
+      final int end = seek(s, newIndex, length, '/');
+      for (int i = end; i >= newIndex; i--) {
+        final char c = (i == length) ? NUL : s.charAt(i);
         final T value = capture.lookup(c, s, i);
         if (value != null) {
           return value;
@@ -131,9 +135,9 @@ public class RadixTrie<T> {
       return null;
     }
 
-    private int indexOf(final CharSequence s, final int start, final char c) {
+    private int seek(final CharSequence s, final int start, final int end, final char c) {
       int i = start;
-      for (; i < s.length(); i++) {
+      for (; i < end; i++) {
         if (s.charAt(i) == c) {
           return i;
         }
