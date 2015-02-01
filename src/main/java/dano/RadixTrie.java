@@ -18,17 +18,17 @@ public final class RadixTrie<T> {
     this.captures = captures;
   }
 
-  public T lookup(final CharSequence s) {
-    return lookup(s, null);
+  public T lookup(final CharSequence path) {
+    return lookup(path, null);
   }
 
-  public T lookup(final CharSequence s, @Nullable final Captor captor) {
+  public T lookup(final CharSequence path, @Nullable final Captor captor) {
     if (captor != null) {
       captor.reset();
     }
     Node<T> root = this.root;
     while (root != null) {
-      final T value = root.lookup(s, 0, captor, 0);
+      final T value = root.lookup(path, 0, captor, 0);
       if (value != null) {
         return value;
       }
@@ -57,7 +57,6 @@ public final class RadixTrie<T> {
 
     private final char head;
     private final char[] tail;
-
     private final Node<T> sibling;
     private final Node<T> edge;
     private final Node<T> capture;
@@ -73,17 +72,17 @@ public final class RadixTrie<T> {
       this.value = value;
     }
 
-    T lookup(final CharSequence s, final int index, @Nullable final Captor captor,
+    T lookup(final CharSequence path, final int index, @Nullable final Captor captor,
              final int capture) {
       // Match prefix
-      final int next = match(s, index);
+      final int next = match(path, index);
       if (next == -1) {
         return null;
       }
       assert next >= index;
 
       // Terminal?
-      if (next == s.length()) {
+      if (next == path.length()) {
         if (captor != null) {
           captor.match(capture);
         }
@@ -91,44 +90,44 @@ public final class RadixTrie<T> {
       }
 
       // Edges
-      final T value = fanout(s, next, captor, capture);
+      final T value = fanout(path, next, captor, capture);
       if (value != null) {
         return value;
       }
 
       // Capture
-      return capture(s, next, captor, capture);
+      return capture(path, next, captor, capture);
     }
 
-    private int match(final CharSequence s, final int index) {
+    private int match(final CharSequence path, final int index) {
       if (head == NUL) {
         return index;
       }
-      if (index >= s.length()) {
+      if (index >= path.length()) {
         return -1;
       }
-      if (head != s.charAt(index)) {
+      if (head != path.charAt(index)) {
         return -1;
       }
       if (tail == null) {
         return index + 1;
       }
-      if (index + 1 + tail.length > s.length()) {
+      if (index + 1 + tail.length > path.length()) {
         return -1;
       }
       for (int i = 0; i < tail.length; i++) {
-        if (tail[i] != s.charAt(index + 1 + i)) {
+        if (tail[i] != path.charAt(index + 1 + i)) {
           return -1;
         }
       }
       return index + 1 + tail.length;
     }
 
-    private T fanout(final CharSequence s, final int next, @Nullable final Captor captor,
+    private T fanout(final CharSequence path, final int next, @Nullable final Captor captor,
                      final int capture) {
       Node<T> edge = this.edge;
       while (edge != null) {
-        final T value = edge.lookup(s, next, captor, capture);
+        final T value = edge.lookup(path, next, captor, capture);
         if (value != null) {
           return value;
         }
@@ -137,14 +136,14 @@ public final class RadixTrie<T> {
       return null;
     }
 
-    private T capture(final CharSequence s, final int index, @Nullable final Captor captor,
+    private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
                       final int capture) {
       if (this.capture == null) {
         return null;
       }
-      final int limit = bound(s, index);
+      final int limit = bound(path, index);
       for (int i = limit; i >= index; i--) {
-        final T value = this.capture.lookup(s, i, captor, capture + 1);
+        final T value = this.capture.lookup(path, i, captor, capture + 1);
         if (value != null) {
           if (captor != null) {
             captor.capture(capture, index, i);
@@ -155,10 +154,10 @@ public final class RadixTrie<T> {
       return null;
     }
 
-    private int bound(final CharSequence s, final int start) {
+    private int bound(final CharSequence path, final int start) {
       int i = start;
-      for (; i < s.length(); i++) {
-        if (s.charAt(i) == SLASH) {
+      for (; i < path.length(); i++) {
+        if (path.charAt(i) == SLASH) {
           return i;
         }
       }
