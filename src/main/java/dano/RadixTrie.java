@@ -67,12 +67,13 @@ public class RadixTrie<T> {
     }
 
     public T lookup(final CharSequence s, final int index) {
-      final int next = match(s, index);
+      final int length = s.length();
+      final int next = match(s, index, length);
       if (next == -1) {
         return null;
       }
       assert next > index;
-      if (next == s.length()) {
+      if (next == length) {
         return value;
       }
       final char c = s.charAt(next);
@@ -80,17 +81,17 @@ public class RadixTrie<T> {
       if (value != null) {
         return value;
       }
-      return capture(s, next);
+      return capture(s, next, length);
     }
 
-    private int match(final CharSequence s, final int index) {
-      if (index >= s.length()) {
+    private int match(final CharSequence s, final int index, final int length) {
+      if (index >= length) {
         return -1;
       }
       if (tail == null) {
         return index + 1;
       }
-      if (index + 1 + tail.length > s.length()) {
+      if (index + 1 + tail.length > length) {
         return -1;
       }
       for (int i = 0; i < tail.length; i++) {
@@ -101,11 +102,11 @@ public class RadixTrie<T> {
       return index + 1 + tail.length;
     }
 
-    private T capture(final CharSequence s, final int index) {
+    private T capture(final CharSequence s, final int index, final int length) {
       if (capture == null) {
         return null;
       }
-      final int maxCapture = seek(s, index, '/') - 1;
+      final int maxCapture = seek(s, index, length, '/') - 1;
       for (int i = maxCapture; i >= index; i--) {
         final char c = s.charAt(i);
         if (c == '/') {
@@ -150,9 +151,9 @@ public class RadixTrie<T> {
       return null;
     }
 
-    private int seek(final CharSequence s, final int start, final char c) {
+    private int seek(final CharSequence s, final int start, final int length, final char c) {
       int i = start;
-      for (; i < s.length(); i++) {
+      for (; i < length; i++) {
         if (s.charAt(i) == c) {
           return i;
         }
