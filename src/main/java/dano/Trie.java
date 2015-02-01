@@ -16,7 +16,7 @@ public class Trie<T> {
 
   public RadixTrie<T> compress() {
     final char head = head(prefix(root, new StringBuilder()));
-    return new RadixTrie<T>(head, root.compress(new StringBuilder()), root.captures(0));
+    return new RadixTrie<T>(head, root.compress(new StringBuilder(), NUL, null), root.captures(0));
   }
 
   private static char head(final CharSequence prefix) {
@@ -38,8 +38,8 @@ public class Trie<T> {
       this.c = c;
     }
 
-    public RadixTrie.Node<T> compress() {
-      return node.compress(new StringBuilder().append(c));
+    public RadixTrie.Node<T> compress(final char siblingHead, final RadixTrie.Node<T> sibling) {
+      return node.compress(new StringBuilder().append(c), siblingHead, sibling);
     }
 
     @Override
@@ -104,7 +104,8 @@ public class Trie<T> {
       return new Edge<T>(c);
     }
 
-    public RadixTrie.Node<T> compress(final StringBuilder prefix) {
+    public RadixTrie.Node<T> compress(final StringBuilder prefix, final char siblingHead,
+                                      final RadixTrie.Node<T> sibling) {
       final Node<T> tail = tail();
       append(prefix, this, tail);
       final T value = tail.value;
@@ -115,16 +116,16 @@ public class Trie<T> {
         captureHead = NUL;
       } else {
         final StringBuilder capturePrefix = new StringBuilder();
-        capture = tail.capture.node.compress(capturePrefix);
+        capture = tail.capture.node.compress(capturePrefix, siblingHead, sibling);
         captureHead = capturePrefix.length() == 0 ? NUL : capturePrefix.charAt(0);
       }
-      final List<RadixTrie.Node<T>> children = new ArrayList<RadixTrie.Node<T>>();
-      final List<Character> first = new ArrayList<Character>();
+      RadixTrie.Node<T> edge = null;
+      char edgeHead = NUL;
       for (final Edge<T> child : tail.children) {
-        children.add(child.compress());
-        first.add(child.c);
+        edge = child.compress(edgeHead, edge);
+        edgeHead = child.c;
       }
-      return new RadixTrie.Node<T>(prefix.toString(), captureHead, capture, first, children, value);
+      return new RadixTrie.Node<T>(prefix.toString(), siblingHead, sibling, edgeHead, edge, captureHead, capture, value);
     }
 
     private void append(final StringBuilder prefix, final Node<T> start, final Node<T> end) {

@@ -39,7 +39,19 @@ public final class RadixTrie<T> {
     if (c != head) {
       return null;
     }
-    return root.lookup(s, 1, captor, 0);
+    Node<T> root = this.root;
+    char head = this.head;
+    while (root != null) {
+      if (head == c) {
+        final T value = root.lookup(s, 1, captor, 0);
+        if (value != null) {
+          return value;
+        }
+      }
+      head = root.siblingHead;
+      root = root.sibling;
+    }
+    return null;
   }
 
   public T lookup(final CharSequence s) {
@@ -53,35 +65,25 @@ public final class RadixTrie<T> {
   static class Node<T> {
 
     private final char[] tail;
-    private final char head1;
-    private final char head2;
-    private final Node<T> edge1;
-    private final Node<T> edge2;
-    private final char[] heads;
-    private final Node<T>[] edges;
+
+    private final char siblingHead;
+    private final Node<T> sibling;
+    private final char edgeHead;
+    private final Node<T> edge;
     private final char captureHead;
     private final Node<T> capture;
     private final T value;
 
-    Node(final String prefix, final char captureHead, final Node<T> capture,
-         final List<Character> first,
-         final List<Node<T>> edges, final T value) {
-      this.tail = (prefix.length() > 1) ? prefix.substring(1).toCharArray() : null;
+    public Node(final String tail, final char siblingHead, final Node<T> sibling,
+                final char edgeHead,
+                final Node<T> edge, final char captureHead, final Node<T> capture, final T value) {
+      this.tail = tail.length() == 0 ? null : tail.substring(1).toCharArray();
+      this.siblingHead = siblingHead;
+      this.sibling = sibling;
+      this.edgeHead = edgeHead;
+      this.edge = edge;
       this.captureHead = captureHead;
       this.capture = capture;
-      this.edge1 = edges.size() > 0 ? edges.get(0) : null;
-      this.edge2 = edges.size() > 1 ? edges.get(1) : null;
-      this.head1 = (edge1 == null ? NUL : first.get(0));
-      this.head2 = (edge2 == null ? NUL : first.get(1));
-      this.edges = edges.size() > 2 ? toArray(edges.subList(2, edges.size())) : null;
-      if (this.edges != null) {
-        this.heads = new char[this.edges.length];
-        for (int i = 0; i < this.edges.length; i++) {
-          this.heads[i] = first.get(i + 2);
-        }
-      } else {
-        this.heads = null;
-      }
       this.value = value;
     }
 
@@ -162,29 +164,17 @@ public final class RadixTrie<T> {
 
     private T descend(final char c, final CharSequence s, final int next,
                       @Nullable final Captor captor, final int capture) {
-      if (edge1 != null && head1 == c) {
-        final T value = edge1.lookup(s, next + 1, captor, capture);
-        if (value != null) {
-          return value;
-        }
-      }
-      if (edge2 != null && head2 == c) {
-        final T value = edge2.lookup(s, next + 1, captor, capture);
-        if (value != null) {
-          return value;
-        }
-      }
-      if (edges != null) {
-        for (int i = 0; i < edges.length; i++) {
-          if (heads[i] != c) {
-            continue;
-          }
-          final Node<T> edge = edges[i];
+      Node<T> edge = this.edge;
+      char head = this.edgeHead;
+      while (edge != null) {
+        if (head == c) {
           final T value = edge.lookup(s, next + 1, captor, capture);
           if (value != null) {
             return value;
           }
         }
+        head = edge.siblingHead;
+        edge = edge.sibling;
       }
       return null;
     }
@@ -202,32 +192,18 @@ public final class RadixTrie<T> {
     @Override
     public String toString() {
       return "Node{'" + (tail == null ? "" : new String(tail)) + "\':" +
-             ", d=" + degree() +
              ", e=" + edgesToString() +
              ", c=" + (capture == null ? "" : captureHead == NUL ? "" : "'" + captureHead + "'") +
              ", v=" + value +
              '}';
     }
 
-    private int degree() {
-      return ((capture == null ? 0 : 1) +
-              (edge1 == null ? 0 : 1) +
-              (edge2 == null ? 0 : 1) +
-              (edges == null ? 0 : edges.length));
-    }
-
     private String edgesToString() {
       final List<Character> chars = new ArrayList<Character>();
-      if (edge1 != null) {
-        chars.add(head1);
-      }
-      if (edge2 != null) {
-        chars.add(head2);
-      }
-      if (heads != null) {
-        for (final char head : heads) {
-          chars.add(head);
-        }
+      Node<T> edge = this.edge;
+      while (edge != null) {
+        chars.add(edgeHead);
+        edge = edge.sibling;
       }
       return chars.toString();
     }
