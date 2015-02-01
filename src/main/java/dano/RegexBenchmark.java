@@ -136,6 +136,7 @@ public class RegexBenchmark {
         return SIMPLE_PATTERN2_RESULT.value(haystackSequence, 0);
     }
 
+    @Benchmark
     public CharSequence testRadixTrieURIRouting() {
         return RADIX_TRIE.lookup(uri, Captor);
     }
