@@ -52,17 +52,17 @@ import static java.util.Arrays.asList;
 public class RegexBenchmark {
 
     @Param({"pre-data-with-dash-post"})
-    public String haystack;
+    private String haystack;
 
-    public CharSequence haystackSequence;
+    private CharSequence haystackSequence;
 
-    public static final Pattern PATTERN = Pattern.compile("pre-(.*)-post");
+    private static final Pattern PATTERN = Pattern.compile("pre-(.*)-post");
 
-    public static final SimplePattern SIMPLE_PATTERN = SimplePattern.of("pre-<data>-post");
-    public static final SimplePattern2 SIMPLE_PATTERN2 = SimplePattern2.of("pre-<data>-post");
-    public static final SimplePattern2.Result SIMPLE_PATTERN2_RESULT = SIMPLE_PATTERN2.result();
+    private static final SimplePattern SIMPLE_PATTERN = SimplePattern.of("pre-<data>-post");
+    private static final SimplePattern2 SIMPLE_PATTERN2 = SimplePattern2.of("pre-<data>-post");
+    private static final SimplePattern2.Result SIMPLE_PATTERN2_RESULT = SIMPLE_PATTERN2.result();
 
-    public static final RadixTrie<String> RADIX_TRIE = RadixTrie.builder(String.class)
+    private static final RadixTrie<String> RADIX_TRIE = RadixTrie.builder(String.class)
         .insert("/usercount", "usercount")
         .insert("/users", "users")
         .insert("/users/<user>", "user")
@@ -74,7 +74,9 @@ public class RegexBenchmark {
         .insert("/users/<user>/playlists/<playlist>", "user-playlist")
         .build();
 
-    public static final List<Pattern> URI_PATTERNS = asList(
+    private static dano.Captor Captor = RADIX_TRIE.captor();
+
+    private static final List<Pattern> URI_PATTERNS = asList(
         Pattern.compile("/usercount"),
         Pattern.compile("/users"),
         Pattern.compile("/users/([^/]*)"),
@@ -86,7 +88,7 @@ public class RegexBenchmark {
         Pattern.compile("/users/([^/]*)/playlists/([^/]*)")
     );
 
-    public static final String RADIX_TRIE_TEST_PATH = "/users/foo-user/playlists/bar-playlist";
+    private static final String RADIX_TRIE_TEST_PATH = "/users/foo-user/playlists/bar-playlist";
 
     private String uri;
     private List<Pattern> uriPatterns;
@@ -134,9 +136,6 @@ public class RegexBenchmark {
         return SIMPLE_PATTERN2_RESULT.value(haystackSequence, 0);
     }
 
-    static dano.Captor Captor = new Captor(64);
-
-    @Benchmark
     public CharSequence testRadixTrieURIRouting() {
         return RADIX_TRIE.lookup(uri, Captor);
     }
