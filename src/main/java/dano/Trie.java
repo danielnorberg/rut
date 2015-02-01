@@ -20,7 +20,7 @@ class Trie<T> {
     }
     final Node<T> root = new Node<T>(c);
     root.insert(path, 1, value);
-    this.roots.add(root);
+    roots.add(root);
     return this;
   }
 
@@ -38,7 +38,7 @@ class Trie<T> {
 
     private final char c;
     private Node<T> capture = null;
-    private List<Node<T>> children = new ArrayList<Node<T>>();
+    private List<Node<T>> edges = new ArrayList<Node<T>>();
     private T value;
 
     private Node(final char c) {
@@ -66,14 +66,14 @@ class Trie<T> {
 
         default:
           Node<T> next = null;
-          for (final Node<T> child : children) {
-            if (child.c == c) {
-              next = child;
+          for (final Node<T> edge : edges) {
+            if (edge.c == c) {
+              next = edge;
             }
           }
           if (next == null) {
             next = node(c);
-            children.add(next);
+            edges.add(next);
           }
           return next.insert(s, i + 1, value);
       }
@@ -92,7 +92,8 @@ class Trie<T> {
       return new Node<T>(c);
     }
 
-    private RadixTrie.Node<T> compress(final StringBuilder prefix, final RadixTrie.Node<T> sibling) {
+    private RadixTrie.Node<T> compress(final StringBuilder prefix,
+                                       final RadixTrie.Node<T> sibling) {
       final Node<T> tail = tail();
       append(prefix, this, tail);
       final T value = tail.value;
@@ -100,19 +101,19 @@ class Trie<T> {
       if (tail.capture == null) {
         capture = null;
       } else {
+        RadixTrie.Node<T> node = null;
         if (tail.capture.value != null) {
-          capture = tail.capture.compress(new StringBuilder(), null);
-        } else {
-          RadixTrie.Node<T> node = null;
-          for (final Node<T> root : tail.capture.children) {
-            node = root.compress(new StringBuilder().append(root.c), node);
-          }
-          capture = node;
+          // Capture terminal node
+          node = new RadixTrie.Node<T>("", null, null, null, tail.capture.value);
         }
+        for (final Node<T> root : tail.capture.edges) {
+          node = root.compress(new StringBuilder().append(root.c), node);
+        }
+        capture = node;
       }
       RadixTrie.Node<T> edge = null;
-      for (final Node<T> child : tail.children) {
-        edge = child.compress(new StringBuilder().append(child.c), edge);
+      for (final Node<T> e : tail.edges) {
+        edge = e.compress(new StringBuilder().append(e.c), edge);
       }
       return new RadixTrie.Node<T>(prefix.toString(), sibling, edge, capture, value);
     }
@@ -120,15 +121,15 @@ class Trie<T> {
     private void append(final StringBuilder prefix, final Node<T> start, final Node<T> end) {
       Node<T> node = start;
       while (node != end) {
-        node = node.children.get(0);
+        node = node.edges.get(0);
         prefix.append(node.c);
       }
     }
 
     private Node<T> tail() {
       Node<T> tail = this;
-      while (tail.children.size() == 1 && tail.capture == null && tail.value == null) {
-        tail = tail.children.get(0);
+      while (tail.edges.size() == 1 && tail.capture == null && tail.value == null) {
+        tail = tail.edges.get(0);
       }
       return tail;
     }
@@ -137,15 +138,15 @@ class Trie<T> {
     public String toString() {
       return "Node{'" + c + "'" +
              ", capture=" + (capture != null) +
-             ", children=" + children.size() +
+             ", edges=" + edges.size() +
              ", value=" + value +
              '}';
     }
 
     private int captures(final int captures) {
       int max = (capture == null) ? captures : capture.captures(captures + 1);
-      for (final Node<T> child : children) {
-        max = Math.max(max, child.captures(captures));
+      for (final Node<T> edge : edges) {
+        max = Math.max(max, edge.captures(captures));
       }
       return max;
     }
