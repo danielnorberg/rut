@@ -19,7 +19,7 @@ public class RadixTrie<T> {
     if (c != first) {
       return null;
     }
-    return root.lookup(s, 0);
+    return root.lookup(s, 1);
   }
 
   public static <T> Builder<T> builder(final Class<T> clazz) {
@@ -71,7 +71,7 @@ public class RadixTrie<T> {
       if (next == -1) {
         return null;
       }
-      assert next > index;
+      assert next >= index;
       if (next == s.length()) {
         return value;
       }
@@ -84,37 +84,44 @@ public class RadixTrie<T> {
     }
 
     private int match(final CharSequence s, final int index) {
-      if (index >= s.length()) {
+      if (index > s.length()) {
         return -1;
       }
       if (tail == null) {
-        return index + 1;
+        return index;
       }
-      if (index + 1 + tail.length > s.length()) {
+      if (index + tail.length > s.length()) {
         return -1;
       }
       for (int i = 0; i < tail.length; i++) {
-        if (tail[i] != s.charAt(index + 1 + i)) {
+        if (tail[i] != s.charAt(index + i)) {
           return -1;
         }
       }
-      return index + 1 + tail.length;
+      return index + tail.length;
     }
 
     private T capture(final CharSequence s, final int index) {
       if (capture == null) {
         return null;
       }
-      final int maxCapture = seek(s, index, '/') - 1;
-      for (int i = maxCapture; i >= index; i--) {
-        final char c = s.charAt(i);
-        if (c == '/') {
-          return null;
+      final int limit = seek(s, index, '/');
+      for (int i = limit; i >= index; i--) {
+        final int next;
+        if (captureHead == NUL) {
+          next = i;
+        } else {
+          if (i >= s.length()) {
+            continue;
+          }
+          final char c = s.charAt(i);
+          if (captureHead != c) {
+            continue;
+          } else {
+            next = i + 1;
+          }
         }
-        if (captureHead != NUL && captureHead != c) {
-          continue;
-        }
-        final T value = capture.lookup(s, i);
+        final T value = capture.lookup(s, next);
         if (value != null) {
           return value;
         }
@@ -122,15 +129,15 @@ public class RadixTrie<T> {
       return null;
     }
 
-    private T descend(final char c, final CharSequence s, final int newIndex) {
+    private T descend(final char c, final CharSequence s, final int next) {
       if (child1 != null && child1First == c) {
-        final T value = child1.lookup(s, newIndex);
+        final T value = child1.lookup(s, next + 1);
         if (value != null) {
           return value;
         }
       }
       if (child2 != null && child2First == c) {
-        final T value = child2.lookup(s, newIndex);
+        final T value = child2.lookup(s, next + 1);
         if (value != null) {
           return value;
         }
@@ -141,7 +148,7 @@ public class RadixTrie<T> {
             continue;
           }
           final Node<T> child = children[i];
-          final T value = child.lookup(s, newIndex);
+          final T value = child.lookup(s, next + 1);
           if (value != null) {
             return value;
           }
