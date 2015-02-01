@@ -46,7 +46,7 @@ public final class RadixTrie<T> {
     return new Builder<T>();
   }
 
-  public static class Node<T> {
+  static class Node<T> {
 
     private final char[] tail;
     private final char head1;
@@ -59,9 +59,9 @@ public final class RadixTrie<T> {
     private final Node<T> capture;
     private final T value;
 
-    public Node(final String prefix, final char captureHead, final Node<T> capture,
-                final List<Character> first,
-                final List<Node<T>> edges, final T value) {
+    Node(final String prefix, final char captureHead, final Node<T> capture,
+         final List<Character> first,
+         final List<Node<T>> edges, final T value) {
       this.tail = (prefix.length() > 1) ? prefix.substring(1).toCharArray() : null;
       this.captureHead = captureHead;
       this.capture = capture;
@@ -86,7 +86,7 @@ public final class RadixTrie<T> {
       return edges.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[edges.size()]);
     }
 
-    public T lookup(final CharSequence s, final int index, final Captor captor, final int capture) {
+    T lookup(final CharSequence s, final int index, final Captor captor, final int capture) {
       final int next = match(s, index);
       if (next == -1) {
         return null;
@@ -238,6 +238,9 @@ public final class RadixTrie<T> {
   }
 
   public static class Builder<T> {
+
+    private Builder() {
+    }
 
     private final Trie<T> trie = new Trie<T>();
 
