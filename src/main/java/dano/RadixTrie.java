@@ -1,5 +1,6 @@
 package dano;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RadixTrie<T> {
@@ -29,41 +30,41 @@ public class RadixTrie<T> {
   public static class Node<T> {
 
     private final char[] tail;
-    private final char child1First;
-    private final char child2First;
-    private final Node<T> child1;
-    private final Node<T> child2;
-    private final char[] childrenFirst;
-    private final Node<T>[] children;
+    private final char head1;
+    private final char head2;
+    private final Node<T> edge1;
+    private final Node<T> edge2;
+    private final char[] heads;
+    private final Node<T>[] edges;
     private final char captureHead;
     private final Node<T> capture;
     private final T value;
 
     public Node(final String prefix, final char captureHead, final Node<T> capture,
                 final List<Character> first,
-                final List<Node<T>> children, final T value) {
+                final List<Node<T>> edges, final T value) {
       this.tail = (prefix.length() > 1) ? prefix.substring(1).toCharArray() : null;
       this.captureHead = captureHead;
       this.capture = capture;
-      this.child1 = children.size() > 0 ? children.get(0) : null;
-      this.child2 = children.size() > 1 ? children.get(1) : null;
-      this.child1First = (child1 == null ? NUL : first.get(0));
-      this.child2First = (child2 == null ? NUL : first.get(1));
-      this.children = children.size() > 2 ? toArray(children.subList(2, children.size())) : null;
-      if (this.children != null) {
-        this.childrenFirst = new char[this.children.length];
-        for (int i = 0; i < this.children.length; i++) {
-          this.childrenFirst[i] = first.get(i + 2);
+      this.edge1 = edges.size() > 0 ? edges.get(0) : null;
+      this.edge2 = edges.size() > 1 ? edges.get(1) : null;
+      this.head1 = (edge1 == null ? NUL : first.get(0));
+      this.head2 = (edge2 == null ? NUL : first.get(1));
+      this.edges = edges.size() > 2 ? toArray(edges.subList(2, edges.size())) : null;
+      if (this.edges != null) {
+        this.heads = new char[this.edges.length];
+        for (int i = 0; i < this.edges.length; i++) {
+          this.heads[i] = first.get(i + 2);
         }
       } else {
-        this.childrenFirst = null;
+        this.heads = null;
       }
       this.value = value;
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> RadixTrie.Node<T>[] toArray(final List<RadixTrie.Node<T>> children) {
-      return children.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[children.size()]);
+    private static <T> RadixTrie.Node<T>[] toArray(final List<RadixTrie.Node<T>> edges) {
+      return edges.toArray((RadixTrie.Node<T>[]) new RadixTrie.Node[edges.size()]);
     }
 
     public T lookup(final CharSequence s, final int index) {
@@ -130,25 +131,25 @@ public class RadixTrie<T> {
     }
 
     private T descend(final char c, final CharSequence s, final int next) {
-      if (child1 != null && child1First == c) {
-        final T value = child1.lookup(s, next + 1);
+      if (edge1 != null && head1 == c) {
+        final T value = edge1.lookup(s, next + 1);
         if (value != null) {
           return value;
         }
       }
-      if (child2 != null && child2First == c) {
-        final T value = child2.lookup(s, next + 1);
+      if (edge2 != null && head2 == c) {
+        final T value = edge2.lookup(s, next + 1);
         if (value != null) {
           return value;
         }
       }
-      if (children != null) {
-        for (int i = 0; i < children.length; i++) {
-          if (childrenFirst[i] != c) {
+      if (edges != null) {
+        for (int i = 0; i < edges.length; i++) {
+          if (heads[i] != c) {
             continue;
           }
-          final Node<T> child = children[i];
-          final T value = child.lookup(s, next + 1);
+          final Node<T> edge = edges[i];
+          final T value = edge.lookup(s, next + 1);
           if (value != null) {
             return value;
           }
@@ -170,14 +171,36 @@ public class RadixTrie<T> {
     @Override
     public String toString() {
       return "Node{'" + (tail == null ? "" : new String(tail)) + "\':" +
-             ", d=" + ((capture == null ? 0 : 1) +
-                       (child1 == null ? 0 : 1) +
-                       (child2 == null ? 0 : 1) +
-                       (children == null ? 0 : children.length)) +
-             ", c=" + (capture != null) +
+             ", d=" + degree() +
+             ", e=" + edgesToString() +
+             ", c=" + (capture == null ? "" : captureHead == NUL ? "" : "'" + captureHead + "'") +
              ", v=" + value +
              '}';
     }
+
+    private int degree() {
+      return ((capture == null ? 0 : 1) +
+                (edge1 == null ? 0 : 1) +
+                (edge2 == null ? 0 : 1) +
+                (edges == null ? 0 : edges.length));
+    }
+
+    private String edgesToString() {
+      final List<Character> chars = new ArrayList<Character>();
+      if (edge1 != null) {
+        chars.add(head1);
+      }
+      if (edge2 != null) {
+        chars.add(head2);
+      }
+      if (heads != null) {
+        for (final char head : heads) {
+          chars.add(head);
+        }
+      }
+      return chars.toString();
+    }
+
   }
 
   @Override
