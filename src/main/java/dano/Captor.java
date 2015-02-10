@@ -1,6 +1,6 @@
 package dano;
 
-public final class Captor {
+public class Captor {
 
   private final int[] start;
   private final int[] end;

@@ -49,7 +49,11 @@ public final class RadixTrie<T> {
     return new Captor(captures);
   }
 
-  public static <T> Builder<T> builder(final Class<T> clazz) {
+  public static <T> Builder<T> builder() {
+    return new Builder<T>();
+  }
+
+  public static <T> Builder<T> builder(Class<T> clazz) {
     return new Builder<T>();
   }
 
@@ -208,6 +212,11 @@ public final class RadixTrie<T> {
 
     public Builder<T> insert(final CharSequence path, final T value) {
       trie.insert(path, value);
+      return this;
+    }
+
+    public Builder<T> insert(final CharSequence path, final Trie.Visitor<T> visitor) {
+      trie.insert(path, visitor);
       return this;
     }
 

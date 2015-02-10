@@ -76,6 +76,20 @@ public class RegexBenchmark {
 
     private static dano.Captor Captor = RADIX_TRIE.captor();
 
+    private static final Router<String> ROUTER = Router.builder(String.class)
+        .route("GET", "/usercount", "usercount")
+        .route("GET", "/users", "users")
+        .route("GET", "/users/<user>", "user")
+        .route("GET", "/users/<user>/playlistcount", "user-playlistcount")
+        .route("GET", "/users/<user>/playlists", "user-playlists")
+        .route("GET", "/users/<user>/playlists/<playlist>/itemcount", "user-playlist-itemcount")
+        .route("GET", "/users/<user>/playlists/<playlist>/items", "user-playlist-items")
+        .route("GET", "/users/<user>/playlists/<playlist>/items/<item>", "user-playlist-item")
+        .route("GET", "/users/<user>/playlists/<playlist>", "user-playlist")
+        .build();
+
+    private static final Router.Result<String> RESULT = ROUTER.result();
+
     private static final List<Pattern> URI_PATTERNS = asList(
         Pattern.compile("/usercount"),
         Pattern.compile("/users"),
@@ -150,6 +164,12 @@ public class RegexBenchmark {
             }
         }
         return null;
+    }
+
+    @Benchmark
+    public String testRouter() {
+        ROUTER.route("GET", uri, RESULT);
+        return RESULT.target();
     }
 
     public static void main(final String... args) throws RunnerException {

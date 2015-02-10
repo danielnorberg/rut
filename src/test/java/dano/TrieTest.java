@@ -27,7 +27,7 @@ public class TrieTest {
     routes.put("/users/<user>/playlists/<playlist>/name", "user-playlist-name");
     routes.put("/users/<user>/playlists/<playlist>/items/<item>", "user-playlist-item");
     routes.put("/users/<user>/playlists/<playlist>", "user-playlist");
-    final RadixTrie.Builder<String> builder = RadixTrie.builder(String.class);
+    final RadixTrie.Builder<String> builder = RadixTrie.builder();
     for (final Map.Entry<String, String> entry : routes.entrySet()) {
       builder.insert(entry.getKey(), entry.getValue());
     }

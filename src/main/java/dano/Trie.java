@@ -7,21 +7,24 @@ class Trie<T> {
 
   private final List<Node<T>> roots = new ArrayList<Node<T>>();
 
-  Trie<T> insert(final CharSequence path, final T value) {
+  T insert(final CharSequence path, final T value) {
+    return insert(path, new DefaultVisitor(value));
+  }
+
+  T insert(final CharSequence path, final Visitor<T> visitor) {
     if (path.length() == 0) {
       throw new IllegalArgumentException();
     }
     final char c = path.charAt(0);
     for (final Node<T> root : roots) {
       if (root.c == c) {
-        root.insert(path, 1, value);
-        return this;
+        return root.insert(path, 1, 0, visitor);
       }
     }
     final Node<T> root = new Node<T>(c);
-    root.insert(path, 1, value);
+    final T v = root.insert(path, 1, 0, visitor);
     roots.add(root);
-    return this;
+    return v;
   }
 
   RadixTrie<T> compress() {
@@ -45,10 +48,11 @@ class Trie<T> {
       this.c = c;
     }
 
-    T insert(final CharSequence s, final int i, final T value) {
+    T insert(final CharSequence s, final int i, final int captureIndex,
+             final Visitor<T> visitor) {
       if (i == s.length()) {
         final T old = this.value;
-        this.value = value;
+        this.value = visitor.finish(captureIndex, this.value);
         return old;
       }
       final char c = s.charAt(i);
@@ -62,7 +66,9 @@ class Trie<T> {
             throw new IllegalArgumentException(
                 "unclosed capture: " + s.subSequence(i, s.length()).toString());
           }
-          return capture.insert(s, end + 1, value);
+          final T value = capture.insert(s, end + 1, captureIndex + 1, visitor);
+          visitor.capture(captureIndex, s.subSequence(i + 1, end));
+          return value;
 
         default:
           Node<T> next = null;
@@ -75,7 +81,7 @@ class Trie<T> {
             next = node(c);
             edges.add(next);
           }
-          return next.insert(s, i + 1, value);
+          return next.insert(s, i + 1, captureIndex, visitor);
       }
     }
 
@@ -166,5 +172,33 @@ class Trie<T> {
     return "Trie{" +
            "roots=" + roots +
            '}';
+  }
+
+  public static interface Visitor<T> {
+
+    public void capture(final int i, final CharSequence s);
+
+    public T finish(final int captures, final T currentValue);
+  }
+
+  /**
+   * A visitor that just sets a new value.
+   */
+  private class DefaultVisitor implements Visitor<T> {
+
+    private final T value;
+
+    public DefaultVisitor(final T value) {
+      this.value = value;
+    }
+
+    @Override
+    public void capture(final int i, final CharSequence s) {
+    }
+
+    @Override
+    public T finish(final int captures, final T currentValue) {
+      return value;
+    }
   }
 }
