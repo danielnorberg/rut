@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import static java.lang.Math.min;
+
 public final class RadixTrie<T> {
 
   private static final char NUL = '\0';
@@ -13,9 +15,35 @@ public final class RadixTrie<T> {
   private final Node<T> root;
   private final int captures;
 
+  public static <T> RadixTrie<T> create() {
+    return new RadixTrie<T>();
+  }
+
+  private RadixTrie() {
+    this.root = null;
+    this.captures = 0;
+  }
+
   RadixTrie(final Node<T> root, final int captures) {
     this.root = root;
     this.captures = captures;
+  }
+
+  public RadixTrie<T> insert(final CharSequence path, final T value) {
+    final Node<T> newRoot = insert(root, path, 0, value);
+    return new RadixTrie<T>(newRoot, newRoot.captures());
+  }
+
+  private static <T> Node<T> insert(final Node<T> head, final CharSequence path, final int i,
+                                    final T value) {
+    final char c = path.charAt(i);
+    Node<T> node = head;
+    while (node != null) {
+      if (node.head == NUL || node.head == c) {
+        return node.insert(path, i, value);
+      }
+    }
+    return new Node<T>(path, head, null, null, value);
   }
 
   public T lookup(final CharSequence path) {
@@ -66,14 +94,137 @@ public final class RadixTrie<T> {
     private final Node<T> capture;
     private final T value;
 
-    public Node(final String prefix, final Node<T> sibling, final Node<T> edge,
+    public Node(final CharSequence prefix, final Node<T> sibling, final Node<T> edge,
                 final Node<T> capture, final T value) {
-      this.head = prefix.length() == 0 ? NUL : prefix.charAt(0);
-      this.tail = prefix.length() == 0 ? null : prefix.substring(1).toCharArray();
+      this(prefix.length() == 0 ? NUL : prefix.charAt(0),
+           prefix.length() == 0 ? null : toCharArray(prefix, 1),
+           sibling, edge, capture, value);
+    }
+
+    private static char[] toCharArray(final CharSequence sequence, final int from) {
+      final int length = sequence.length() - from;
+      final char[] chars = new char[length];
+      for (int i = 0; i < length; i++) {
+        chars[i] = sequence.charAt(from + i);
+      }
+      return chars;
+    }
+
+    private Node(final char head, final char[] tail, final Node<T> sibling, final Node<T> edge,
+                 final Node<T> capture, final T value) {
+      this.head = head;
+      this.tail = tail;
       this.sibling = sibling;
       this.edge = edge;
       this.capture = capture;
       this.value = value;
+    }
+
+    Node<T> insert(final CharSequence path, final int index, final T value) {
+      final String prefix = prefix();
+      final int length = min(path.length() - index, prefix.length());
+
+      // Compare
+      int i;
+      for (i = 0; i < length; i++) {
+        final char c = path.charAt(index + i);
+        final char p = prefix.charAt(i);
+        if (c != p) {
+          break;
+        }
+      }
+
+      // Branch?
+      if (i < prefix.length()) {
+        final String newPrefix = prefix.substring(0, i);
+        final String edgePrefix = prefix.substring(i);
+        final Node<T> newCapture;
+        final Node<T> branch;
+        final T newValue;
+        if (i + index == path.length()) {
+          branch = null;
+          newCapture = null;
+          newValue = value;
+        } else {
+          final char c = path.charAt(index + i);
+          if (c == '<') {
+            final int end = indexOf(path, index + i + 1, '>');
+            if (end == -1) {
+              throw new IllegalArgumentException(
+                  "unclosed capture: " + path.subSequence(i, path.length()).toString());
+            }
+            branch = null;
+            newCapture = chain(path, index + i, value);
+            newValue = null;
+          } else {
+            branch = chain(path, index + i, value);
+            newCapture = null;
+            newValue = null;
+          }
+        }
+        final Node<T> newEdge = new Node<T>(edgePrefix, branch, edge, this.capture, this.value);
+        return new Node<T>(newPrefix, sibling, newEdge, newCapture, newValue);
+      }
+
+      // Terminate?
+      if (index + length() == path.length()) {
+        return new Node<T>(head, tail, sibling, edge, capture, value);
+      }
+
+      // Extend
+      final char c = path.charAt(index + length);
+      final Node<T> newEdge;
+      final Node<T> newCapture;
+      if (c == '<') {
+        final int end = indexOf(path, index + length + 1, '>');
+        if (end == -1) {
+          throw new IllegalArgumentException(
+              "unclosed capture: " + path.subSequence(index + length, path.length()).toString());
+        }
+        newEdge = edge;
+        if (capture == null) {
+          newCapture = chain(path, end + 1, value);
+        } else {
+          newCapture = capture.insert(path, end + 1, value);
+        }
+      } else {
+        newCapture = capture;
+        if (edge == null) {
+          newEdge = chain(path, index + length(), value);
+        } else {
+          newEdge = edge.insert(path, index + length(), value);
+        }
+      }
+
+      return new Node<T>(head, tail, sibling, newEdge, newCapture, this.value);
+    }
+
+    private static <T> Node<T> chain(final CharSequence path, final int index, final T value) {
+      final int length = path.length();
+      final int start = indexOf(path, index, '<');
+      if (start == -1) {
+        return new Node<T>(path.subSequence(index, length), null, null, null, value);
+      }
+      final int end = indexOf(path, start + 1, '>');
+      if (end == -1) {
+        throw new IllegalArgumentException(
+            "unclosed capture: " + path.subSequence(start, length).toString());
+      }
+      final Node<T> capture = chain(path, end + 1, value);
+      return new Node<T>(path.subSequence(index, start - 1), null, null, capture, null);
+    }
+
+    private static int indexOf(final CharSequence s, final int start, final char c) {
+      for (int i = start; i < s.length(); i++) {
+        if (s.charAt(i) == c) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    private int length() {
+      return head == NUL ? 0 : tail == null ? 1 : 1 + tail.length;
     }
 
     T lookup(final CharSequence path, final int index, @Nullable final Captor captor,
@@ -174,33 +325,35 @@ public final class RadixTrie<T> {
 
     @Override
     public String toString() {
-      return "Node{'" + prefix() + "\':" +
-             ", e=" + edgePrefixes() +
+      return "Node{'" + prefix() + "\': " +
+             "e=" + prefixes(edge) +
              ", c=" + (capture == null ? "" : capture.prefix() + "'") +
              ", v=" + (value == null ? "" : value.toString()) +
              '}';
     }
 
-    private String edgePrefixes() {
-      final List<String> edgeStrings = new ArrayList<String>();
-      Node<T> edge = this.edge;
-      while (edge != null) {
-        edgeStrings.add(edge.prefix());
-        edge = edge.sibling;
-      }
-      return edgeStrings.toString();
-    }
-
     private String prefix() {
       return head == NUL ? "" : String.valueOf(head) + ((tail == null) ? "" : String.valueOf(tail));
     }
+
+    public int captures() {
+      // TODO
+      return 0;
+    }
+  }
+
+  private static <T> String prefixes(Node<T> node) {
+    final List<String> prefixes = new ArrayList<String>();
+    while (node != null) {
+      prefixes.add(node.prefix());
+      node = node.sibling;
+    }
+    return prefixes.toString();
   }
 
   @Override
   public String toString() {
-    return "RadixTrie{" +
-           "root=" + root +
-           '}';
+    return "RadixTrie{" + prefixes(root) + "}";
   }
 
   public static class Builder<T> {
