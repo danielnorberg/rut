@@ -33,4 +33,13 @@ public class Util {
     }
     return -1;
   }
+
+  static char[] toCharArray(final CharSequence sequence, final int from) {
+    final int length = sequence.length() - from;
+    final char[] chars = new char[length];
+    for (int i = 0; i < length; i++) {
+      chars[i] = sequence.charAt(from + i);
+    }
+    return chars;
+  }
 }

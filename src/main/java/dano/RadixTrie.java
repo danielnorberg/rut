@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import static dano.Util.indexOf;
+import static dano.Util.toCharArray;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -105,15 +106,6 @@ public final class RadixTrie<T> {
       this(prefix.length() == 0 ? NUL : prefix.charAt(0),
            prefix.length() == 0 ? null : toCharArray(prefix, 1),
            sibling, edge, capture, value);
-    }
-
-    private static char[] toCharArray(final CharSequence sequence, final int from) {
-      final int length = sequence.length() - from;
-      final char[] chars = new char[length];
-      for (int i = 0; i < length; i++) {
-        chars[i] = sequence.charAt(from + i);
-      }
-      return chars;
     }
 
     private Node(final char head, final char[] tail, final Node<T> sibling, final Node<T> edge,
