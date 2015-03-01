@@ -133,6 +133,7 @@ public final class RadixTrie<T> {
     }
 
     Node<T> insert(final CharSequence path, final int index, final T value) {
+      // Check that this node is on the path
       if (head != NUL && head != path.charAt(index)) {
         if (sibling != null) {
           final Node<T> newSibling = sibling.insert(path, index, value);
@@ -142,10 +143,9 @@ public final class RadixTrie<T> {
         }
       }
 
+      // Compare
       final String prefix = prefix();
       final int length = min(path.length() - index, prefix.length());
-
-      // Compare
       int i;
       for (i = 0; i < length; i++) {
         final char c = path.charAt(index + i);
@@ -167,25 +167,15 @@ public final class RadixTrie<T> {
           newCapture = null;
           newValue = value;
         } else {
-          final char c = path.charAt(index + i);
-          if (c == '<') {
-            // Split: Truncate this node and fork into one normal edge for the existing path and
-            // one capture for the new path.
-            final int end = indexOf(path, '>', index + i + 1);
-            if (end == -1) {
-              throw new IllegalArgumentException(
-                  "unclosed capture: " + path.subSequence(i, path.length()).toString());
-            }
+          final Node<T> next = chain(path, index + i, value);
+          if (next.length() == 0) {
             branch = null;
-            newCapture = chain(path, end + 1, value);
-            newValue = null;
+            newCapture = next.capture;
           } else {
-            // Split: Truncate this node and fork into two normal edges, one for the existing
-            // path and one for the new path.
-            branch = chain(path, index + i, value);
+            branch = next;
             newCapture = null;
-            newValue = null;
           }
+          newValue = null;
         }
         final Node<T> newEdge = new Node<T>(edgePrefix, branch, edge, this.capture, this.value);
         return new Node<T>(newPrefix, sibling, newEdge, newCapture, newValue);
