@@ -48,15 +48,7 @@ public final class RadixTrie<T> {
     if (captor != null) {
       captor.reset();
     }
-    Node<T> root = this.root;
-    while (root != null) {
-      final T value = root.lookup(path, 0, captor, 0);
-      if (value != null) {
-        return value;
-      }
-      root = root.sibling;
-    }
-    return null;
+    return Node.lookup(root, path, 0, captor, 0);
   }
 
   public int captures() {
@@ -83,7 +75,8 @@ public final class RadixTrie<T> {
     return chain(null, path, index, value);
   }
 
-  private static <T> Node<T> chain(final Node<T> sibling, final CharSequence path, final int index, final T value) {
+  private static <T> Node<T> chain(final Node<T> sibling, final CharSequence path, final int index,
+                                   final T value) {
     final int length = path.length();
     final int start = indexOf(path, '<', index);
     if (start == -1) {
@@ -133,7 +126,7 @@ public final class RadixTrie<T> {
       this.value = value;
     }
 
-    Node<T> insert(final CharSequence path, final int index, final T value) {
+    private Node<T> insert(final CharSequence path, final int index, final T value) {
       // Check that this node is on the path
       if (head != NUL && head != path.charAt(index)) {
         if (sibling != null) {
@@ -219,7 +212,20 @@ public final class RadixTrie<T> {
       return head == NUL ? 0 : tail == null ? 1 : 1 + tail.length;
     }
 
-    T lookup(final CharSequence path, final int index, @Nullable final Captor captor,
+    private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
+                                final Captor captor, final int capture) {
+      Node<T> node = root;
+      while (node != null) {
+        final T value = node.lookup(path, i, captor, capture);
+        if (value != null) {
+          return value;
+        }
+        node = node.sibling;
+      }
+      return null;
+    }
+
+    private T lookup(final CharSequence path, final int index, @Nullable final Captor captor,
              final int capture) {
       // Match prefix
       final int next = match(path, index);
@@ -236,8 +242,8 @@ public final class RadixTrie<T> {
         return value;
       }
 
-      // Edges
-      final T value = fanout(path, next, captor, capture);
+      // Edge fanout
+      final T value = lookup(edge, path, next, captor, capture);
       if (value != null) {
         return value;
       }
@@ -268,19 +274,6 @@ public final class RadixTrie<T> {
         }
       }
       return index + 1 + tail.length;
-    }
-
-    private T fanout(final CharSequence path, final int next, @Nullable final Captor captor,
-                     final int capture) {
-      Node<T> edge = this.edge;
-      while (edge != null) {
-        final T value = edge.lookup(path, next, captor, capture);
-        if (value != null) {
-          return value;
-        }
-        edge = edge.sibling;
-      }
-      return null;
     }
 
     private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
