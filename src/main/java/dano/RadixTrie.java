@@ -129,7 +129,7 @@ public final class RadixTrie<T> {
         }
       }
 
-      // Compare
+      // Find shared prefix length
       final String prefix = prefix();
       final int length = min(path.length() - index, prefix.length());
       int i;
@@ -167,7 +167,7 @@ public final class RadixTrie<T> {
         return new Node<T>(newPrefix, sibling, newEdge, newCapture, newValue);
       }
 
-      // Terminate?
+      // End?
       if (index + length() == path.length()) {
         return new Node<T>(head, tail, sibling, edge, capture, value);
       }
