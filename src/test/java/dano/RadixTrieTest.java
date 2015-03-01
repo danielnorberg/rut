@@ -4,37 +4,12 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class RadixTrieTest {
-
-  private static final String TARGET = "dummy";
-
-  final List<String> paths = asList(
-      "/a",
-      "/aa",
-      "/ab",
-      "/a/b",
-      "/a/<b>",
-      "/a/<b>/c",
-      "/bb/c",
-      "/b/c",
-      "/c/<d>",
-      "/c/d/e",
-      "/<a>/b/<c>/<d>/e"
-  );
-
-  @Test
-  public void testPaths() {
-    RadixTrie<String> rdx = RadixTrie.create();
-    for (int i = 0; i < paths.size(); i++) {
-      final String path = paths.get(i);
-      rdx = rdx.insert(path, path);
-      verifyPaths(rdx, i);
-    }
-  }
 
   @Test
   public void testSingleRoot() {
@@ -99,24 +74,51 @@ public class RadixTrieTest {
     assertThat(rdx.lookup("ab"), is("ab"));
   }
 
-  private void verifyPaths(final RadixTrie<String> rdx, final int n) {
-    for (int i = 0; i < n; i++) {
-      final String path = paths.get(i) ;
-      final String result = rdx.lookup(path);
-      if (!path.equals(result)) {
-        System.out.println(rdx.lookup(path) + " != " + path);
-        assertThat(rdx.lookup(path), is(path));
-      }
+  @Test
+  public void testPaths() {
+    final List<String> paths = asList(
+        "/a",
+        "/aa",
+        "/ab",
+        "/a/b",
+        "/a/<b>",
+        "/a/<b>/c",
+        "/bb/c",
+        "/b/c",
+        "/c/<d>",
+        "/c/d/e",
+        "/<a>/b/<c>/<d>/e"
+    );
+    RadixTrie<String> rdx = RadixTrie.create();
+    for (int i = 0; i < paths.size(); i++) {
+      final String path = paths.get(i);
+      rdx = rdx.insert(path, path);
+      verifyPaths(rdx, paths.subList(0, i + 1));
     }
   }
 
-  @Test
-  public void testInsert() {
-    final RadixTrie<String> rdx0 = RadixTrie.create();
-    final RadixTrie<String> rdx1 = rdx0.insert("/aa", "aa");
-    final RadixTrie<String> rdx2 = rdx1.insert("/ab", "ab");
-    final RadixTrie<String> foo = rdx1.insert("/aa/foo", "foo");
-    final RadixTrie<String> bar = foo.insert("/aa/fo", "foo");
-    System.out.println(foo);
+  private void verifyPaths(final RadixTrie<String> rdx, final List<String> paths) {
+    for (final String path : paths) {
+      assertThat(rdx.lookup(path), is(path));
+      assertThat(rdx.captures(), is(captures(paths)));
+    }
+  }
+
+  private static int captures(final List<String> paths) {
+    int maxCaptures = 0;
+    for (final String path : paths) {
+      maxCaptures = max(maxCaptures, captures(path));
+    }
+    return maxCaptures;
+  }
+
+  private static int captures(final String path) {
+    int count = 0;
+    for (int i = 0; i < path.length(); i++) {
+      if (path.charAt(i) == '<') {
+        count++;
+      }
+    }
+    return count;
   }
 }

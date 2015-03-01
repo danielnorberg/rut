@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import static dano.Util.indexOf;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public final class RadixTrie<T> {
@@ -328,8 +329,10 @@ public final class RadixTrie<T> {
     }
 
     public int captures() {
-      // TODO
-      return 0;
+      final int captures = (capture == null) ? 0 : capture.captures() + 1;
+      final int edgeCaptures = (edge == null) ? 0 : edge.captures();
+      final int siblingCaptures = (sibling == null) ? 0 : sibling.captures();
+      return max(captures, max(edgeCaptures, siblingCaptures));
     }
   }
 
