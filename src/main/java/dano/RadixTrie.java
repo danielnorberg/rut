@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 import static dano.Util.indexOf;
 import static dano.Util.toCharArray;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 public final class RadixTrie<T> {
 
@@ -18,14 +17,6 @@ public final class RadixTrie<T> {
   private final Node<T> root;
   private final int captures;
 
-  public static <T> RadixTrie<T> create() {
-    return new RadixTrie<T>();
-  }
-
-  public static <T> RadixTrie<T> create(Class<T> clazz) {
-    return new RadixTrie<T>();
-  }
-
   private RadixTrie() {
     this.root = new Node<T>("", null, null, null, null);
     this.captures = 0;
@@ -34,11 +25,6 @@ public final class RadixTrie<T> {
   RadixTrie(final Node<T> root, final int captures) {
     this.root = root;
     this.captures = captures;
-  }
-
-  public RadixTrie<T> insert(final CharSequence path, final T value) {
-    final Node<T> newRoot = root.insert(path, 0, value);
-    return new RadixTrie<T>(newRoot, newRoot.captures());
   }
 
   public T lookup(final CharSequence path) {
@@ -116,92 +102,6 @@ public final class RadixTrie<T> {
       this.edge = edge;
       this.capture = capture;
       this.value = value;
-    }
-
-    private Node<T> insert(final CharSequence path, final int index, final T value) {
-      // Check that this node is on the path
-      if (head != NUL && head != path.charAt(index)) {
-        if (sibling != null) {
-          final Node<T> newSibling = sibling.insert(path, index, value);
-          return new Node<T>(head, tail, newSibling, edge, capture, this.value);
-        } else {
-          return chain(this, path, index, value);
-        }
-      }
-
-      // Find shared prefix length
-      final String prefix = prefix();
-      final int length = min(path.length() - index, prefix.length());
-      int i;
-      for (i = 0; i < length; i++) {
-        final char c = path.charAt(index + i);
-        final char p = prefix.charAt(i);
-        if (c != p) {
-          break;
-        }
-      }
-
-      // Branch?
-      if (i < prefix.length()) {
-        final String newPrefix = prefix.substring(0, i);
-        final String edgePrefix = prefix.substring(i);
-        final Node<T> newCapture;
-        final Node<T> branch;
-        final T newValue;
-        if (i + index == path.length()) {
-          branch = null;
-          newCapture = null;
-          newValue = value;
-        } else {
-          final Node<T> next = chain(path, index + i, value);
-          if (next.length() == 0) {
-            branch = null;
-            newCapture = next.capture;
-          } else {
-            branch = next;
-            newCapture = null;
-          }
-          newValue = null;
-        }
-        final Node<T> newEdge = new Node<T>(edgePrefix, branch, edge, this.capture, this.value);
-        return new Node<T>(newPrefix, sibling, newEdge, newCapture, newValue);
-      }
-
-      // End?
-      if (index + length() == path.length()) {
-        return new Node<T>(head, tail, sibling, edge, capture, value);
-      }
-
-      // Extend
-      final char c = path.charAt(index + length);
-      final Node<T> newEdge;
-      final Node<T> newCapture;
-      if (c == '<') {
-        final int end = indexOf(path, '>', index + length + 1);
-        if (end == -1) {
-          throw new IllegalArgumentException(
-              "unclosed capture: " + path.subSequence(index + length, path.length()).toString());
-        }
-        newEdge = edge;
-        if (capture == null) {
-          newCapture = chain(path, end + 1, value);
-        } else {
-          newCapture = capture.insert(path, end + 1, value);
-        }
-      } else {
-        newCapture = capture;
-        if (edge == null) {
-          newEdge = chain(path, index + prefix.length(), value);
-        } else {
-          newEdge = edge.insert(path, index + prefix.length(), value);
-        }
-      }
-
-      return new Node<T>(head, tail, sibling, newEdge, newCapture, this.value);
-    }
-
-    private int length() {
-      return head == NUL ? 0 : tail == null ? 1 : 1 + tail.length;
     }
 
     private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,

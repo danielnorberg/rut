@@ -13,42 +13,47 @@ public class RadixTrieTest {
 
   @Test
   public void testSingleRoot() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
-        .insert("a", "a");
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("a", "a")
+        .build();
     assertThat(rdx.lookup("a"), is("a"));
   }
 
   @Test
   public void testSingleRootCapture() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
-        .insert("<a>", "<a>");
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("<a>", "<a>")
+        .build();
     assertThat(rdx.lookup("foobar"), is("<a>"));
   }
 
   @Test
   public void testTwoRoots() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
-        .insert("b", "b");
+        .insert("b", "b")
+        .build();
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("b"), is("b"));
   }
 
   @Test
   public void testOneRootOneEdge() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
-        .insert("ab", "ab");
+        .insert("ab", "ab")
+        .build();
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("ab"), is("ab"));
   }
 
   @Test
   public void testOneRootTwoEdges() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .insert("ab", "ab")
-        .insert("ac", "ac");
+        .insert("ac", "ac")
+        .build();
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("ab"), is("ab"));
     assertThat(rdx.lookup("ac"), is("ac"));
@@ -56,10 +61,11 @@ public class RadixTrieTest {
 
   @Test
   public void testOneRootOneEdgeSplit() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .insert("abbb", "abbb")
-        .insert("abcc", "abcc");
+        .insert("abcc", "abcc")
+        .build();
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("abbb"), is("abbb"));
     assertThat(rdx.lookup("abcc"), is("abcc"));
@@ -67,9 +73,10 @@ public class RadixTrieTest {
 
   @Test
   public void testOneRootOneEdgeReverse() {
-    RadixTrie<String> rdx = RadixTrie.create(String.class)
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("ab", "ab")
-        .insert("a", "a");
+        .insert("a", "a")
+        .build();
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("ab"), is("ab"));
   }
@@ -89,11 +96,11 @@ public class RadixTrieTest {
         "/c/d/e",
         "/<a>/b/<c>/<d>/e"
     );
-    RadixTrie<String> rdx = RadixTrie.create();
+    RadixTrie.Builder<String> rdx = RadixTrie.builder();
     for (int i = 0; i < paths.size(); i++) {
       final String path = paths.get(i);
       rdx = rdx.insert(path, path);
-      verifyPaths(rdx, paths.subList(0, i + 1));
+      verifyPaths(rdx.build(), paths.subList(0, i + 1));
     }
   }
 
