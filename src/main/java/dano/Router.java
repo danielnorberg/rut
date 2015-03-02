@@ -155,7 +155,8 @@ public final class Router<T> {
 
   private static class Route<T> {
 
-    private final List<Map.Entry<String, Target<T>>> methods = new ArrayList<Map.Entry<String, Target<T>>>();
+    private final List<Map.Entry<String, Target<T>>> methods =
+        new ArrayList<Map.Entry<String, Target<T>>>();
 
     public Target<T> lookup(final CharSequence method) {
       for (final Map.Entry<String, Target<T>> entry : methods) {

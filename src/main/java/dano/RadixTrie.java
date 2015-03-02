@@ -5,13 +5,13 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import static dano.Util.toCharArray;
+import static dano.Util.toAsciiByteArray;
 import static java.lang.Math.max;
 
 public final class RadixTrie<T> {
 
-  private static final char CAPTURE = 127;
-  private static final char SLASH = '/';
+  private static final byte CAPTURE = 127;
+  private static final byte SLASH = '/';
 
   private final Node<T> root;
   private final int captures;
@@ -54,20 +54,20 @@ public final class RadixTrie<T> {
 
   static class Node<T> {
 
-    private final char head;
-    private final char[] tail;
+    private final byte head;
+    private final byte[] tail;
     private final Node<T> sibling;
     private final Node<T> edge;
     private final T value;
 
     public Node(final CharSequence prefix, final Node<T> sibling, final Node<T> edge,
                 final T value) {
-      this(prefix.length() == 0 ? CAPTURE : prefix.charAt(0),
-           prefix.length() == 0 ? null : toCharArray(prefix, 1),
+      this(prefix.length() == 0 ? CAPTURE : (byte) prefix.charAt(0),
+           prefix.length() == 0 ? null : toAsciiByteArray(prefix, 1),
            sibling, edge, value);
     }
 
-    private Node(final char head, final char[] tail, final Node<T> sibling, final Node<T> edge,
+    private Node(final byte head, final byte[] tail, final Node<T> sibling, final Node<T> edge,
                  final T value) {
       this.head = head;
       this.tail = tail;
@@ -193,9 +193,19 @@ public final class RadixTrie<T> {
     }
 
     private String prefix() {
-      return head == CAPTURE
-             ? "<*>"
-             : head + (tail == null ? "" : String.valueOf(tail));
+      if (head == CAPTURE) {
+        return "<*>";
+      } else {
+        if (tail == null) {
+          return String.valueOf((char) head);
+        } else {
+          final StringBuilder b = new StringBuilder().append((char) head);
+          for (final byte c : tail) {
+            b.append((char) c);
+          }
+          return b.toString();
+        }
+      }
     }
 
     public int captures() {

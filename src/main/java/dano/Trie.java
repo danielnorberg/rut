@@ -25,11 +25,14 @@ class Trie<T> {
   private static <T> T insert(final Map<Character, Node<T>> nodes, final CharSequence path,
                               final int i, final int captureIndex, final Visitor<T> visitor) {
     final char c = path.charAt(i);
+    if (c >= CAPTURE) {
+      throw new IllegalArgumentException();
+    }
     switch (c) {
       case '<':
         Node<T> capture = nodes.get(CAPTURE);
         if (capture == null) {
-          capture = Node.of(CAPTURE);
+          capture = new Node<T>(CAPTURE);
           nodes.put(CAPTURE, capture);
         }
         final int end = Util.indexOf(path, '>', i + 1);
@@ -44,7 +47,7 @@ class Trie<T> {
       default:
         Node<T> next = nodes.get(c);
         if (next == null) {
-          next = Node.of(c);
+          next = new Node<T>(c);
           nodes.put(c, next);
         }
         return next.extend(path, i + 1, captureIndex, visitor);
@@ -71,10 +74,6 @@ class Trie<T> {
 
     private Node(final char c) {
       this.c = c;
-    }
-
-    private static <T> Node<T> of(final char c) {
-      return new Node<T>(c);
     }
 
     private T extend(final CharSequence path, final int i,
@@ -120,14 +119,6 @@ class Trie<T> {
              ", edges=" + edges.size() +
              ", value=" + value +
              '}';
-    }
-
-    private int captures() {
-      int captures = 0;
-      for (final Node<T> edge : edges.values()) {
-        captures = Math.max(captures, edge.captures());
-      }
-      return (c == CAPTURE) ? captures + 1 : captures;
     }
   }
 

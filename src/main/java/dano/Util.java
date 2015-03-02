@@ -46,6 +46,19 @@ public class Util {
     return chars;
   }
 
+  static byte[] toAsciiByteArray(final CharSequence sequence, final int from) {
+    final int length = sequence.length() - from;
+    final byte[] chars = new byte[length];
+    for (int i = 0; i < length; i++) {
+      final char c = sequence.charAt(from + i);
+      if (c > 127) {
+        throw new IllegalArgumentException();
+      }
+      chars[i] = (byte) c;
+    }
+    return chars;
+  }
+
   static <T> Collection<T> reversed(final Collection<T> values) {
     final List<T> list = new ArrayList<T>(values);
     reverse(list);
