@@ -79,6 +79,13 @@ public final class RadixTrie<T> {
       assert sibling == null || head < sibling.head;
     }
 
+    private int captures() {
+      final int captures = (head == CAPTURE) ? 1 : 0;
+      final int edgeCaptures = (edge == null) ? 0 : edge.captures();
+      final int siblingCaptures = (sibling == null) ? 0 : sibling.captures();
+      return captures + max(edgeCaptures, siblingCaptures);
+    }
+
     private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
                                 final Captor captor, final int capture) {
       Node<T> node = root;
@@ -184,14 +191,6 @@ public final class RadixTrie<T> {
       return i;
     }
 
-    @Override
-    public String toString() {
-      return "Node{'" + prefix() + "\': " +
-             "e=" + prefixes(edge) +
-             ", v=" + (value == null ? "" : value.toString()) +
-             '}';
-    }
-
     private String prefix() {
       if (head == CAPTURE) {
         return "<*>";
@@ -208,11 +207,12 @@ public final class RadixTrie<T> {
       }
     }
 
-    public int captures() {
-      final int captures = (head == CAPTURE) ? 1 : 0;
-      final int edgeCaptures = (edge == null) ? 0 : edge.captures();
-      final int siblingCaptures = (sibling == null) ? 0 : sibling.captures();
-      return captures + max(edgeCaptures, siblingCaptures);
+    @Override
+    public String toString() {
+      return "Node{'" + prefix() + "\': " +
+             "e=" + prefixes(edge) +
+             ", v=" + (value == null ? "" : value.toString()) +
+             '}';
     }
   }
 
