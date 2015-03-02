@@ -87,13 +87,9 @@ class Trie<T> {
     }
 
     private RadixTrie.Node<T> compress(final RadixTrie.Node<T> sibling) {
-      // Compute compressed prefix
       final StringBuilder prefix = new StringBuilder();
       final Node<T> tail = tail(prefix);
-
-      // Suffix branches
       final RadixTrie.Node<T> edge = compressEdges(tail.edges);
-
       return new RadixTrie.Node<T>(prefix.toString(), sibling, edge, tail.value);
     }
 

@@ -1,38 +1,6 @@
-/*
- * Copyright (c) 2014, Oracle America, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  * Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- *  * Neither the name of Oracle nor the names of its contributors may be used
- *    to endorse or promote products derived from this software without
- *    specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package dano;
 
 import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -41,146 +9,86 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.nio.CharBuffer;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.util.Arrays.asList;
 
 @State(Scope.Thread)
 public class RegexBenchmark {
 
-    @Param({"pre-data-with-dash-post"})
-    private String haystack;
+  private static final String[] PATHS = {
+      "/usercount",
+      "/users",
+      "/users/<user>",
+      "/users/<user>/playlistcount",
+      "/users/<user>/playlists",
+      "/users/<user>/playlists/<playlist>/itemcount",
+      "/users/<user>/playlists/<playlist>/items",
+      "/users/<user>/playlists/<playlist>/items/<item>",
+      "/users/<user>/playlists/<playlist>"
+  };
 
-    private CharSequence haystackSequence;
+  private static final Router<String> ROUTER;
+  private static final Router.Result<String> RESULT;
 
-    private static final Pattern PATTERN = Pattern.compile("pre-(.*)-post");
+  static {
+    final Router.Builder<String> builder = Router.builder();
+    for (final String path : PATHS) {
+      builder.route("GET", path, path);
+    }
+    ROUTER = builder.build();
+    RESULT = ROUTER.result();
+  }
 
-    private static final SimplePattern SIMPLE_PATTERN = SimplePattern.of("pre-<data>-post");
-    private static final SimplePattern2 SIMPLE_PATTERN2 = SimplePattern2.of("pre-<data>-post");
-    private static final SimplePattern2.Result SIMPLE_PATTERN2_RESULT = SIMPLE_PATTERN2.result();
+  private static final Pattern[] PATTERNS;
 
-    private static final RadixTrie<String> RADIX_TRIE = RadixTrie.builder(String.class)
-        .insert("/usercount", "usercount")
-        .insert("/users", "users")
-        .insert("/users/<user>", "user")
-        .insert("/users/<user>/playlistcount", "user-playlistcount")
-        .insert("/users/<user>/playlists", "user-playlists")
-        .insert("/users/<user>/playlists/<playlist>/itemcount", "user-playlist-itemcount")
-        .insert("/users/<user>/playlists/<playlist>/items", "user-playlist-items")
-        .insert("/users/<user>/playlists/<playlist>/items/<item>", "user-playlist-item")
-        .insert("/users/<user>/playlists/<playlist>", "user-playlist")
+  static {
+    PATTERNS = new Pattern[PATHS.length];
+    for (int i = 0; i < PATHS.length; i++) {
+      final String path = PATHS[i];
+      final String regex = path.replaceAll("<.+?>", "[^/]*");
+      PATTERNS[i] = Pattern.compile(regex);
+    }
+  }
+
+  private static final String PATH = "/users/foo-user/playlists/bar-playlist";
+
+  private String path;
+  private Pattern[] uriPatterns;
+
+  @Setup
+  public void setup() {
+    path = PATH;
+    uriPatterns = PATTERNS;
+  }
+
+  @Benchmark
+  public Pattern benchRegexRouting() throws InterruptedException {
+    for (final Pattern pattern : uriPatterns) {
+      if (pattern.matcher(path).matches()) {
+        return pattern;
+      }
+    }
+    throw new AssertionError();
+  }
+
+  @Benchmark
+  public String benchRadixTreeRouting() {
+    ROUTER.route("GET", path, RESULT);
+    final String target = RESULT.target();
+    if (target == null) {
+      throw new AssertionError();
+    }
+    return target;
+  }
+
+  public static void main(final String... args) throws RunnerException {
+    Options opt = new OptionsBuilder()
+        .include(".*" + RegexBenchmark.class.getSimpleName() + ".*")
+        .warmupIterations(5)
+        .measurementIterations(20)
+        .forks(5)
         .build();
 
-    private static dano.Captor Captor = RADIX_TRIE.captor();
-
-    private static final Router<String> ROUTER = Router.builder(String.class)
-        .route("GET", "/usercount", "usercount")
-        .route("GET", "/users", "users")
-        .route("GET", "/users/<user>", "user")
-        .route("GET", "/users/<user>/playlistcount", "user-playlistcount")
-        .route("GET", "/users/<user>/playlists", "user-playlists")
-        .route("GET", "/users/<user>/playlists/<playlist>/itemcount", "user-playlist-itemcount")
-        .route("GET", "/users/<user>/playlists/<playlist>/items", "user-playlist-items")
-        .route("GET", "/users/<user>/playlists/<playlist>/items/<item>", "user-playlist-item")
-        .route("GET", "/users/<user>/playlists/<playlist>", "user-playlist")
-        .build();
-
-    private static final Router.Result<String> RESULT = ROUTER.result();
-
-    private static final List<Pattern> URI_PATTERNS = asList(
-        Pattern.compile("/usercount"),
-        Pattern.compile("/users"),
-        Pattern.compile("/users/([^/]*)"),
-        Pattern.compile("/users/([^/]*)/playlistcount"),
-        Pattern.compile("/users/([^/]*)/playlists"),
-        Pattern.compile("/users/([^/]*)/playlists/([^/]*)/itemcount"),
-        Pattern.compile("/users/([^/]*)/playlists/([^/]*)/items"),
-        Pattern.compile("/users/([^/]*)/playlists/([^/]*)/items/([^/]*)"),
-        Pattern.compile("/users/([^/]*)/playlists/([^/]*)")
-    );
-
-    private static final String RADIX_TRIE_TEST_PATH = "/users/foo-user/playlists/bar-playlist";
-
-    private String uri;
-    private List<Pattern> uriPatterns;
-
-    @Setup
-    public void setup() {
-        haystackSequence = CharBuffer.wrap(haystack);
-        uri = RADIX_TRIE_TEST_PATH;
-        uriPatterns = URI_PATTERNS;
-    }
-
-    @Benchmark
-    public String testRegex() {
-        final Matcher matcher = PATTERN.matcher(haystack);
-        if (!matcher.matches()) {
-            throw new AssertionError("no match");
-        }
-        return matcher.group(1);
-    }
-
-    @Benchmark
-    public String testSimple1() {
-        final SimpleMatcher matcher = SIMPLE_PATTERN.matcher(haystack);
-        if (!matcher.matches()) {
-            throw new AssertionError("no match");
-        }
-        return matcher.value(0);
-    }
-
-    @Benchmark
-    public CharSequence testSimple2() {
-        final SimpleMatcher2 matcher = SIMPLE_PATTERN2.matcher(haystackSequence);
-        if (!matcher.matches()) {
-            throw new AssertionError("no match");
-        }
-        return matcher.value(0);
-    }
-
-    @Benchmark
-    public CharSequence testSimple2ReusableOutput() {
-        final boolean matches = SIMPLE_PATTERN2.match(haystackSequence, SIMPLE_PATTERN2_RESULT);
-        if (!matches) {
-            throw new AssertionError("no match");
-        }
-        return SIMPLE_PATTERN2_RESULT.value(haystackSequence, 0);
-    }
-
-    @Benchmark
-    public CharSequence testRadixTrieURIRouting() {
-        return RADIX_TRIE.lookup(uri, Captor);
-    }
-
-    @Benchmark
-    public Pattern testRegexURIRouting() {
-        for (int i = 0; i < uriPatterns.size(); i++) {
-            final Pattern pattern = uriPatterns.get(i);
-            if (pattern.matcher(uri).matches()) {
-                return pattern;
-            }
-        }
-        return null;
-    }
-
-    @Benchmark
-    public String testRouter() {
-        ROUTER.route("GET", uri, RESULT);
-        return RESULT.target();
-    }
-
-    public static void main(final String... args) throws RunnerException {
-        Options opt = new OptionsBuilder()
-            .include(".*" + RegexBenchmark.class.getSimpleName() + ".*testRadixTrieURIRouting.*")
-            .warmupIterations(5)
-            .measurementIterations(20)
-            .forks(5)
-            .build();
-
-        new Runner(opt).run();
-    }
+    new Runner(opt).run();
+  }
 
 }
