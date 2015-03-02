@@ -1,7 +1,10 @@
 package dano;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import static java.util.Collections.reverse;
 
 public class Util {
 
@@ -41,5 +44,11 @@ public class Util {
       chars[i] = sequence.charAt(from + i);
     }
     return chars;
+  }
+
+  static <T> Collection<T> reversed(final Collection<T> values) {
+    final List<T> list = new ArrayList<T>(values);
+    reverse(list);
+    return list;
   }
 }
