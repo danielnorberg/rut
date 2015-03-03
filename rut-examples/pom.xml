@@ -3,17 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>io.danielnorberg</groupId>
     <artifactId>rut-parent</artifactId>
+    <groupId>io.danielnorberg</groupId>
     <version>0.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>rut-benchmark</artifactId>
-
-  <properties>
-    <jmh.version>1.6.1</jmh.version>
-  </properties>
+  <artifactId>rut-examples</artifactId>
 
   <dependencies>
     <dependency>
@@ -21,17 +17,5 @@
       <artifactId>rut</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-core</artifactId>
-      <version>${jmh.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-generator-annprocess</artifactId>
-      <version>${jmh.version}</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
-
 </project>

@@ -210,6 +210,13 @@ public final class Router<T> {
     }
 
     /**
+     * Get the number of captures parameter values.
+     */
+    public int paramValues() {
+      return captor.values();
+    }
+
+    /**
      * Get the name of the captured path parameter at index {code i}.
      */
     public String paramName(final int i) {
