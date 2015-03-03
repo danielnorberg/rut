@@ -1,9 +1,12 @@
-package dano;
+package io.danielnorberg.rut;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static dano.Util.reversed;
+import static java.util.Collections.reverse;
 
 class Trie<T> {
 
@@ -35,7 +38,7 @@ class Trie<T> {
           capture = new Node<T>(CAPTURE);
           nodes.put(CAPTURE, capture);
         }
-        final int end = Util.indexOf(path, '>', i + 1);
+        final int end = indexOf(path, '>', i + 1);
         if (end == -1) {
           throw new IllegalArgumentException(
               "unclosed capture: " + path.subSequence(i, path.length()).toString());
@@ -151,5 +154,20 @@ class Trie<T> {
     public T finish(final int captures, final T currentValue) {
       return value;
     }
+  }
+
+  private static <T> Collection<T> reversed(final Collection<T> values) {
+    final List<T> list = new ArrayList<T>(values);
+    reverse(list);
+    return list;
+  }
+
+  private static int indexOf(final CharSequence sequence, final char needle, final int index) {
+    for (int i = index; i < sequence.length(); i++) {
+      if (sequence.charAt(i) == needle) {
+        return i;
+      }
+    }
+    return -1;
   }
 }

@@ -1,4 +1,4 @@
-package dano;
+package io.danielnorberg.rut;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package dano;
+package io.danielnorberg.rut.benchmark;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
@@ -11,20 +11,24 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.regex.Pattern;
 
+import io.danielnorberg.rut.Router;
+
 @State(Scope.Thread)
-public class RegexBenchmark {
+public class RoutingBenchmark {
 
   private static final String[] PATHS = {
-      "/usercount",
-      "/users",
+      "/users/",
       "/users/<user>",
-      "/users/<user>/playlistcount",
-      "/users/<user>/playlists",
-      "/users/<user>/playlists/<playlist>/itemcount",
-      "/users/<user>/playlists/<playlist>/items",
-      "/users/<user>/playlists/<playlist>/items/<item>",
-      "/users/<user>/playlists/<playlist>"
+      "/users/<user>/profile",
+      "/users/<user>/blogs/",
+      "/users/<user>/blogs/<blog>/posts/",
+      "/users/<user>/blogs/<blog>/posts/<post>",
+      "/users/<user>/blogs/<blog>",
+      "/blogs/",
+      "/blogs/<blog>",
   };
+
+  private static final String PATH = "/users/foo-user/blogs/bar-blog/posts/baz-post";
 
   private static final Router<String> ROUTER;
   private static final Router.Result<String> RESULT;
@@ -49,8 +53,6 @@ public class RegexBenchmark {
     }
   }
 
-  private static final String PATH = "/users/foo-user/playlists/bar-playlist";
-
   private String path;
   private Pattern[] uriPatterns;
 
@@ -61,7 +63,7 @@ public class RegexBenchmark {
   }
 
   @Benchmark
-  public Pattern benchRegexRouting() throws InterruptedException {
+  public Pattern regexRouting() throws InterruptedException {
     for (final Pattern pattern : uriPatterns) {
       if (pattern.matcher(path).matches()) {
         return pattern;
@@ -71,7 +73,7 @@ public class RegexBenchmark {
   }
 
   @Benchmark
-  public String benchRadixTreeRouting() {
+  public String radixTreeRouting() {
     ROUTER.route("GET", path, RESULT);
     final String target = RESULT.target();
     if (target == null) {
@@ -82,7 +84,7 @@ public class RegexBenchmark {
 
   public static void main(final String... args) throws RunnerException {
     Options opt = new OptionsBuilder()
-        .include(".*" + RegexBenchmark.class.getSimpleName() + ".*")
+        .include(".*" + RoutingBenchmark.class.getSimpleName() + ".*")
         .warmupIterations(5)
         .measurementIterations(20)
         .forks(5)
@@ -90,5 +92,4 @@ public class RegexBenchmark {
 
     new Runner(opt).run();
   }
-
 }

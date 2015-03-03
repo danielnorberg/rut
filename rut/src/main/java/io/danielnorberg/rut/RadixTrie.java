@@ -1,14 +1,13 @@
-package dano;
+package io.danielnorberg.rut;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import static dano.Util.toAsciiByteArray;
 import static java.lang.Math.max;
 
-public final class RadixTrie<T> {
+final class RadixTrie<T> {
 
   private static final byte CAPTURE = 127;
   private static final byte SLASH = '/';
@@ -21,34 +20,35 @@ public final class RadixTrie<T> {
     this.captures = root.captures();
   }
 
-  public T lookup(final CharSequence path) {
+  T lookup(final CharSequence path) {
     return lookup(path, null);
   }
 
-  public T lookup(final CharSequence path, @Nullable final Captor captor) {
+  T lookup(final CharSequence path, @Nullable final Captor captor) {
     if (captor != null) {
       captor.reset();
     }
     return Node.lookup(root, path, 0, captor, 0);
   }
 
-  public int captures() {
+  int captures() {
     return captures;
   }
 
-  public Captor captor() {
+  Captor captor() {
     return captor(captures);
   }
 
-  public static Captor captor(final int captures) {
+  static Captor captor(final int captures) {
     return new Captor(captures);
   }
 
-  public static <T> Builder<T> builder() {
+  static <T> Builder<T> builder() {
     return new Builder<T>();
   }
 
-  public static <T> Builder<T> builder(Class<T> clazz) {
+  @SuppressWarnings("UnusedParameters")
+  static <T> Builder<T> builder(Class<T> clazz) {
     return new Builder<T>();
   }
 
@@ -60,8 +60,8 @@ public final class RadixTrie<T> {
     private final Node<T> edge;
     private final T value;
 
-    public Node(final CharSequence prefix, final Node<T> sibling, final Node<T> edge,
-                final T value) {
+    Node(final CharSequence prefix, final Node<T> sibling, final Node<T> edge,
+         final T value) {
       this(prefix.length() == 0 ? CAPTURE : (byte) prefix.charAt(0),
            prefix.length() == 0 ? null : toAsciiByteArray(prefix, 1),
            sibling, edge, value);
@@ -230,25 +230,38 @@ public final class RadixTrie<T> {
     return "RadixTrie{" + root + "}";
   }
 
-  public static class Builder<T> {
+  static class Builder<T> {
 
     private Builder() {
     }
 
     private final Trie<T> trie = new Trie<T>();
 
-    public Builder<T> insert(final CharSequence path, final T value) {
+    Builder<T> insert(final CharSequence path, final T value) {
       trie.insert(path, value);
       return this;
     }
 
-    public Builder<T> insert(final CharSequence path, final Trie.Visitor<T> visitor) {
+    Builder<T> insert(final CharSequence path, final Trie.Visitor<T> visitor) {
       trie.insert(path, visitor);
       return this;
     }
 
-    public RadixTrie<T> build() {
+    RadixTrie<T> build() {
       return trie.compress();
     }
+  }
+
+  private static byte[] toAsciiByteArray(final CharSequence sequence, final int from) {
+    final int length = sequence.length() - from;
+    final byte[] chars = new byte[length];
+    for (int i = 0; i < length; i++) {
+      final char c = sequence.charAt(from + i);
+      if (c > 127) {
+        throw new IllegalArgumentException();
+      }
+      chars[i] = (byte) c;
+    }
+    return chars;
   }
 }

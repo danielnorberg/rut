@@ -1,12 +1,9 @@
-package dano;
+package io.danielnorberg.rut;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import static dano.Router.Status.METHOD_NOT_ALLOWED;
-import static dano.Router.Status.NOT_FOUND;
-import static dano.Router.Status.SUCCESS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -24,8 +21,8 @@ public class RouterTest {
     final Router.Result<String> result = router.result();
 
     final Router.Status status1 = router.route("GET", "/foo/bar-value/baz", result);
-    assertThat(status1, is(SUCCESS));
-    assertThat(result.status(), is(SUCCESS));
+    assertThat(status1, is(Router.Status.SUCCESS));
+    assertThat(result.status(), is(Router.Status.SUCCESS));
     assertThat(result.isSuccess(), is(true));
     assertThat(result.target(), is(target));
     final String name = result.paramName(0);
@@ -34,13 +31,13 @@ public class RouterTest {
     assertThat(value.toString(), is("bar-value"));
 
     final Router.Status status2 = router.route("DELETE", "/foo/bar/baz", result);
-    assertThat(status2, is(METHOD_NOT_ALLOWED));
-    assertThat(result.status(), is(METHOD_NOT_ALLOWED));
+    assertThat(status2, is(Router.Status.METHOD_NOT_ALLOWED));
+    assertThat(result.status(), is(Router.Status.METHOD_NOT_ALLOWED));
     assertThat(result.isSuccess(), is(false));
 
     final Router.Status status3 = router.route("GET", "/non/existent/path", result);
-    assertThat(status3, is(NOT_FOUND));
-    assertThat(result.status(), is(NOT_FOUND));
+    assertThat(status3, is(Router.Status.NOT_FOUND));
+    assertThat(result.status(), is(Router.Status.NOT_FOUND));
     assertThat(result.isSuccess(), is(false));
   }
 

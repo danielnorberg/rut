@@ -1,4 +1,4 @@
-package dano;
+package io.danielnorberg.rut;
 
 public class Captor {
 
@@ -7,7 +7,7 @@ public class Captor {
   private boolean match;
   private int captured;
 
-  public Captor(final int captures) {
+  Captor(final int captures) {
     this.start = new int[captures];
     this.end = new int[captures];
   }
