@@ -210,9 +210,9 @@ public final class Router<T> {
     }
 
     /**
-     * Get the number of captures parameter values.
+     * Get the number of captured parameter values.
      */
-    public int paramValues() {
+    public int params() {
       return captor.values();
     }
 

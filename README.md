@@ -50,7 +50,7 @@ final Handler handler = result.target();
 out.print(handler + ": ");
 
 // Print captured path parameter names and values
-for (int i = 0; i < result.paramValues(); i++) {
+for (int i = 0; i < result.params(); i++) {
   out.print(result.paramName(i) + "=" + result.paramValue(i) + " ");
 }
 ```
