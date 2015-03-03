@@ -1,4 +1,4 @@
-import io.danielnorberg.rut.Router;
+import io.norberg.rut.Router;
 
 import static java.lang.System.out;
 

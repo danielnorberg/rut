@@ -1,4 +1,4 @@
-package io.danielnorberg.rut;
+package io.norberg.rut;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

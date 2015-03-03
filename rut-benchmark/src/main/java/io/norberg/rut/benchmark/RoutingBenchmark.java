@@ -1,4 +1,4 @@
-package io.danielnorberg.rut.benchmark;
+package io.norberg.rut.benchmark;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
@@ -11,7 +11,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.regex.Pattern;
 
-import io.danielnorberg.rut.Router;
+import io.norberg.rut.Router;
 
 @State(Scope.Thread)
 public class RoutingBenchmark {

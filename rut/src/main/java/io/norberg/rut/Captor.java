@@ -1,4 +1,4 @@
-package io.danielnorberg.rut;
+package io.norberg.rut;
 
 public class Captor {
 

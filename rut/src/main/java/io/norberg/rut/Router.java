@@ -1,8 +1,8 @@
-package io.danielnorberg.rut;
+package io.norberg.rut;
 
-import static io.danielnorberg.rut.Router.Status.METHOD_NOT_ALLOWED;
-import static io.danielnorberg.rut.Router.Status.NOT_FOUND;
-import static io.danielnorberg.rut.Router.Status.SUCCESS;
+import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
+import static io.norberg.rut.Router.Status.NOT_FOUND;
+import static io.norberg.rut.Router.Status.SUCCESS;
 
 /**
  * A router for routing REST request paths to endpoints.
