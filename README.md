@@ -71,3 +71,14 @@ Notes
 -----
 
 * *rut* only handles ascii. Paths should be URL encoded when routed.
+
+
+Benchmarks
+----------
+
+```
+mvn clean package
+
+java -jar rut-benchmark/target/rut-benchmark.jar
+```
+
