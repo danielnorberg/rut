@@ -66,3 +66,8 @@ Output: `create user blog post: user=foo-user blog=bar-blog`
   <version>0.1</version>
 </dependency>
 ```
+
+Notes
+-----
+
+* *rut* only handles ascii. Paths should thus be URL encoded when routed.
