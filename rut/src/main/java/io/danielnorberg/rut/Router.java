@@ -1,10 +1,5 @@
 package io.danielnorberg.rut;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import static io.danielnorberg.rut.Router.Status.METHOD_NOT_ALLOWED;
 import static io.danielnorberg.rut.Router.Status.NOT_FOUND;
 import static io.danielnorberg.rut.Router.Status.SUCCESS;
@@ -159,9 +154,11 @@ public final class Router<T> {
       @Override
       public Route<T> finish(final int captures, final Route<T> currentValue) {
         paramNames = new String[captures];
-        final Route<T> route = currentValue == null ? new Route<T>() : currentValue;
-        route.method(method, new Target<T>(target, paramNames));
-        return route;
+        final Target<T> target = new Target<T>(this.target, paramNames);
+        if (currentValue == null) {
+          return Route.of(method, target);
+        }
+        return currentValue.with(method, target);
       }
     }
   }
@@ -270,14 +267,28 @@ public final class Router<T> {
    */
   private static class Route<T> {
 
-    private final List<Map.Entry<String, Target<T>>> methods =
-        new ArrayList<Map.Entry<String, Target<T>>>();
+    private final String method;
+    private final Target<T> target;
+    private final Route<T> next;
+
+    private Route(final String method, final Target<T> target, final Route<T> next) {
+      this.method = method;
+      this.target = target;
+      this.next = next;
+    }
+
+    /**
+     * Create a new route.
+     */
+    private static <T> Route<T> of(final String method, final Target<T> target) {
+      return new Route<T>(method, target, null);
+    }
 
     /**
      * Add a new method and target to this route.
      */
-    private void method(final String method, final Target<T> target) {
-      methods.add(new AbstractMap.SimpleEntry<String, Target<T>>(method, target));
+    private Route<T> with(final String method, final Target<T> target) {
+      return new Route<T>(method, target, this);
     }
 
     /**
@@ -286,10 +297,12 @@ public final class Router<T> {
      * @return The endpoint if the method matched. {@code null} otherwise.
      */
     private Target<T> lookup(final CharSequence method) {
-      for (final Map.Entry<String, Target<T>> entry : methods) {
-        if (equals(entry.getKey(), method)) {
-          return entry.getValue();
+      Route<T> route = this;
+      while (route != null) {
+        if (equals(route.method, method)) {
+          return route.target;
         }
+        route = route.next;
       }
       return null;
     }
