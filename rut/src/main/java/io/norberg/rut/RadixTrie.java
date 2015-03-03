@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import static java.lang.Math.max;
 
-final class RadixTrie<T> {
+class RadixTrie<T> {
 
   private static final byte CAPTURE = 127;
   private static final byte SLASH = '/';
@@ -24,7 +24,7 @@ final class RadixTrie<T> {
     return lookup(path, null);
   }
 
-  T lookup(final CharSequence path, @Nullable final Captor captor) {
+  T lookup(final CharSequence path, @Nullable final Trie.Captor captor) {
     if (captor != null) {
       captor.reset();
     }
@@ -35,12 +35,12 @@ final class RadixTrie<T> {
     return captures;
   }
 
-  Captor captor() {
+  Trie.Captor captor() {
     return captor(captures);
   }
 
-  static Captor captor(final int captures) {
-    return new Captor(captures);
+  static Trie.Captor captor(final int captures) {
+    return new Trie.Captor(captures);
   }
 
   static <T> Builder<T> builder() {
@@ -87,7 +87,7 @@ final class RadixTrie<T> {
     }
 
     private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
-                                final Captor captor, final int capture) {
+                                final Trie.Captor captor, final int capture) {
       Node<T> node = root;
       while (node != null) {
         final T value = node.lookup(path, i, captor, capture);
@@ -99,7 +99,7 @@ final class RadixTrie<T> {
       return null;
     }
 
-    private T lookup(final CharSequence path, final int index, @Nullable final Captor captor,
+    private T lookup(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
                      final int capture) {
       // Capture?
       if (head == CAPTURE) {
@@ -152,7 +152,7 @@ final class RadixTrie<T> {
       return index + 1 + tail.length;
     }
 
-    private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
+    private T capture(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
                       final int capture) {
       final int limit = bound(path, index);
 
