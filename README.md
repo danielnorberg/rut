@@ -70,4 +70,4 @@ Output: `create user blog post: user=foo-user blog=bar-blog`
 Notes
 -----
 
-* *rut* only handles ascii. Paths should thus be URL encoded when routed.
+* *rut* only handles ascii. Paths should be URL encoded when routed.
