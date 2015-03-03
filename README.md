@@ -63,7 +63,7 @@ Output: `create user blog post: user=foo-user blog=bar-blog`
 <dependency>
   <groupId>io.norberg</groupId>
   <artifactId>rut</artifactId>
-  <version>0.3</version>
+  <version>0.4</version>
 </dependency>
 ```
 
