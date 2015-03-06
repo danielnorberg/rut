@@ -107,6 +107,7 @@ public class RadixTrieTest {
   private void verifyPaths(final RadixTrie<String> rdx, final List<String> paths) {
     for (final String path : paths) {
       assertThat(rdx.lookup(path), is(path));
+      assertThat(rdx.lookup(path + "?query"), is(path));
       assertThat(rdx.captures(), is(captures(paths)));
     }
   }

@@ -11,6 +11,7 @@ class RadixTrie<T> {
 
   private static final byte CAPTURE = 127;
   private static final byte SLASH = '/';
+  private static final byte QUERY = '?';
 
   private final Node<T> root;
   private final int captures;
@@ -114,7 +115,7 @@ class RadixTrie<T> {
       assert next >= index;
 
       // Terminal?
-      if (next == path.length()) {
+      if (next == path.length() || path.charAt(next) == QUERY) {
         if (captor != null) {
           captor.match(capture);
         }
@@ -157,7 +158,7 @@ class RadixTrie<T> {
       final int limit = bound(path, index);
 
       // Terminal?
-      if (value != null && limit == path.length()) {
+      if (value != null && (limit == path.length() || path.charAt(limit) == QUERY)) {
         if (captor != null) {
           captor.match(capture + 1);
           captor.capture(capture, index, limit);
@@ -184,7 +185,8 @@ class RadixTrie<T> {
     private int bound(final CharSequence path, final int start) {
       int i = start;
       for (; i < path.length(); i++) {
-        if (path.charAt(i) == SLASH) {
+        final char c = path.charAt(i);
+        if (c == SLASH || c == QUERY) {
           return i;
         }
       }
