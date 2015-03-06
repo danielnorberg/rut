@@ -102,15 +102,31 @@ class RadixTrie<T> {
 
     private T lookup(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
                      final int capture) {
+
+      if (index >= path.length()) {
+        return null;
+      }
+
       // Capture?
       if (head == CAPTURE) {
         return capture(path, index, captor, capture);
       }
 
       // Match prefix
-      final int next = match(path, index);
-      if (next == -1) {
+      final int next;
+      if (head != path.charAt(index)) {
         return null;
+      } else if (tail == null) {
+        next = index + 1;
+      } else if (index + 1 + tail.length > path.length()) {
+        return null;
+      } else {
+        for (int i = 0; i < tail.length; i++) {
+          if (tail[i] != path.charAt(index + 1 + i)) {
+            return null;
+          }
+        }
+        next = index + 1 + tail.length;
       }
       assert next >= index;
 
@@ -129,28 +145,6 @@ class RadixTrie<T> {
       }
 
       return null;
-    }
-
-    private int match(final CharSequence path, final int index) {
-      assert head != CAPTURE;
-      if (index >= path.length()) {
-        return -1;
-      }
-      if (head != path.charAt(index)) {
-        return -1;
-      }
-      if (tail == null) {
-        return index + 1;
-      }
-      if (index + 1 + tail.length > path.length()) {
-        return -1;
-      }
-      for (int i = 0; i < tail.length; i++) {
-        if (tail[i] != path.charAt(index + 1 + i)) {
-          return -1;
-        }
-      }
-      return index + 1 + tail.length;
     }
 
     private T capture(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
