@@ -89,9 +89,18 @@ class RadixTrie<T> {
 
     private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
                                 final Trie.Captor captor, final int capture) {
+      if (i >= path.length()) {
+        return null;
+      }
+
       Node<T> node = root;
       while (node != null) {
-        final T value = node.lookup(path, i, captor, capture);
+        final T value;
+        if (node.head == CAPTURE) {
+          value = node.capture(path, i, captor, capture);
+        } else {
+          value = node.lookup(path, i, captor, capture);
+        }
         if (value != null) {
           return value;
         }
@@ -102,16 +111,6 @@ class RadixTrie<T> {
 
     private T lookup(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
                      final int capture) {
-
-      if (index >= path.length()) {
-        return null;
-      }
-
-      // Capture?
-      if (head == CAPTURE) {
-        return capture(path, index, captor, capture);
-      }
-
       // Match prefix
       final int next;
       if (head != path.charAt(index)) {
