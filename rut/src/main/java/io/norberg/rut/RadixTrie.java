@@ -149,10 +149,24 @@ class RadixTrie<T> {
 
     private T capture(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
                       final int capture) {
-      final int limit = bound(path, index);
+      int i;
+
+      // Find end
+      boolean terminal = true;
+      for (i = index; i < path.length(); i++) {
+        final char c = path.charAt(i);
+        if (c == SLASH) {
+          terminal = false;
+          break;
+        }
+        if (c == QUERY) {
+          break;
+        }
+      }
+      final int limit = i;
 
       // Terminal?
-      if (value != null && (limit == path.length() || path.charAt(limit) == QUERY)) {
+      if (value != null && terminal) {
         if (captor != null) {
           captor.match(capture + 1);
           captor.capture(capture, index, limit);
@@ -162,7 +176,7 @@ class RadixTrie<T> {
 
       // Fanout
       if (edge != null) {
-        for (int i = limit; i >= index; i--) {
+        for (i = limit; i >= index; i--) {
           final T value = lookup(edge, path, i, captor, capture + 1);
           if (value != null) {
             if (captor != null) {
@@ -174,17 +188,6 @@ class RadixTrie<T> {
       }
 
       return null;
-    }
-
-    private int bound(final CharSequence path, final int start) {
-      int i = start;
-      for (; i < path.length(); i++) {
-        final char c = path.charAt(i);
-        if (c == SLASH || c == QUERY) {
-          return i;
-        }
-      }
-      return i;
     }
 
     private String prefix() {
