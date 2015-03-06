@@ -90,13 +90,21 @@ class Trie<T> {
     }
 
     private RadixTrie.Node<T> compress(final RadixTrie.Node<T> sibling) {
+      if (c == CAPTURE) {
+        return new RadixTrie.Node<T>((byte) c, null, sibling, compressEdges(edges), value);
+      }
+
       final StringBuilder prefix = new StringBuilder();
-      final Node<T> tail = tail(prefix);
-      final RadixTrie.Node<T> edge = compressEdges(tail.edges);
-      return new RadixTrie.Node<T>(prefix.toString(), sibling, edge, tail.value);
+      final Node<T> end = compress(prefix);
+      final RadixTrie.Node<T> edge = compressEdges(end.edges);
+
+      final byte head = (byte) prefix.charAt(0);
+      final byte[] tail = prefix.length() == 1 ? null : asciiBytes(prefix, 1);
+
+      return new RadixTrie.Node<T>(head, tail, sibling, edge, end.value);
     }
 
-    private Node<T> tail(final StringBuilder prefix) {
+    private Node<T> compress(final StringBuilder prefix) {
       Node<T> node = this;
       while (true) {
         prefix.append(node.c);
@@ -235,5 +243,18 @@ class Trie<T> {
       }
       return haystack.subSequence(start[i], end[i]);
     }
+  }
+
+  private static byte[] asciiBytes(final CharSequence sequence, final int from) {
+    final int length = sequence.length() - from;
+    final byte[] chars = new byte[length];
+    for (int i = 0; i < length; i++) {
+      final char c = sequence.charAt(from + i);
+      if (c > 127) {
+        throw new IllegalArgumentException();
+      }
+      chars[i] = (byte) c;
+    }
+    return chars;
   }
 }

@@ -61,15 +61,8 @@ class RadixTrie<T> {
     private final Node<T> edge;
     private final T value;
 
-    Node(final CharSequence prefix, final Node<T> sibling, final Node<T> edge,
+    Node(final byte head, final byte[] tail, final Node<T> sibling, final Node<T> edge,
          final T value) {
-      this(prefix.length() == 0 ? CAPTURE : (byte) prefix.charAt(0),
-           prefix.length() == 0 ? null : toAsciiByteArray(prefix, 1),
-           sibling, edge, value);
-    }
-
-    private Node(final byte head, final byte[] tail, final Node<T> sibling, final Node<T> edge,
-                 final T value) {
       this.head = head;
       this.tail = tail;
       this.sibling = sibling;
@@ -248,18 +241,5 @@ class RadixTrie<T> {
     RadixTrie<T> build() {
       return trie.compress();
     }
-  }
-
-  private static byte[] toAsciiByteArray(final CharSequence sequence, final int from) {
-    final int length = sequence.length() - from;
-    final byte[] chars = new byte[length];
-    for (int i = 0; i < length; i++) {
-      final char c = sequence.charAt(from + i);
-      if (c > 127) {
-        throw new IllegalArgumentException();
-      }
-      chars[i] = (byte) c;
-    }
-    return chars;
   }
 }
