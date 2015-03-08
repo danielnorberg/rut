@@ -3,6 +3,8 @@ rut
 
 Pronounced as *route* (/ru:t/).
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.norberg/rut/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.norberg/rut)
+
 [![Build Status](https://travis-ci.org/danielnorberg/rut.svg?branch=master)](https://travis-ci.org/danielnorberg/rut)
 
 
