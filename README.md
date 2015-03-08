@@ -46,21 +46,29 @@ final Router<Handler> router = Router.builder(Handler.class)
 final Router.Result<Handler> result = router.result();
 
 // Route a request
-router.route("POST", "/users/foo-user/blogs/bar-blog/posts/", result);
+router.route("POST", "/users/foo-user/blogs/bar-blog/posts/?q=baz&w=quux", result);
 
 assert result.isSuccess();
 final Handler handler = result.target();
 
 // Print handler name
-out.print(handler + ": ");
+out.println("handler: " + handler);
 
 // Print captured path parameter names and values
 for (int i = 0; i < result.params(); i++) {
-  out.print(result.paramName(i) + "=" + result.paramValue(i) + " ");
+  out.printf("param %d: %s=%s%n", i, result.paramName(i), result.paramValue(i));
 }
+
+// Print query
+out.println("query: " + result.query());
 ```
 
-Output: `create user blog post: user=foo-user blog=bar-blog`
+Output: ```
+handler: create user blog post
+param 0: user=foo-user
+param 1: blog=bar-blog
+query: q=baz&w=quux
+```
 
 ### `pom.xml`
 

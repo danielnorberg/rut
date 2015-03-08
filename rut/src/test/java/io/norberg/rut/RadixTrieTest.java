@@ -7,6 +7,7 @@ import java.util.List;
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
 public class RadixTrieTest {
@@ -107,16 +108,22 @@ public class RadixTrieTest {
   private void verifyPaths(final RadixTrie<String> rdx, final List<String> paths) {
     for (final String path : paths) {
       final RadixTrie.Captor captor = rdx.captor();
+
       assertThat(rdx.lookup(path), is(path));
       assertThat(rdx.lookup(path, captor), is(path));
       assertThat(captor.isMatch(), is(true));
-      assertThat(captor.query(), is(path.indexOf('?')));
+      assertThat(captor.queryStart(), is(-1));
+      assertThat(captor.queryEnd(), is(-1));
+      assertThat(captor.query(path), is(nullValue()));
 
-      final String pathWithQuery = path + "?query";
+      final String query = "query";
+      final String pathWithQuery = path + "?" + query;
       assertThat(rdx.lookup(pathWithQuery), is(path));
       assertThat(rdx.lookup(pathWithQuery, captor), is(path));
       assertThat(captor.isMatch(), is(true));
-      assertThat(captor.query(), is(pathWithQuery.indexOf('?')));
+      assertThat(captor.queryStart(), is(path.length() + 1));
+      assertThat(captor.queryEnd(), is(pathWithQuery.length()));
+      assertThat(captor.query(pathWithQuery).toString(), is(query));
 
       assertThat(rdx.captures(), is(captures(paths)));
     }

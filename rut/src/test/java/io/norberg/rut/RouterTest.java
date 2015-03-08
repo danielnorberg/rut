@@ -25,7 +25,8 @@ public class RouterTest {
     assertThat(result.status(), is(Router.Status.SUCCESS));
     assertThat(result.isSuccess(), is(true));
     assertThat(result.target(), is(target));
-    assertThat(result.query(), is(18));
+    assertThat(result.queryStart(), is(19));
+    assertThat(result.query().toString(), is("q=a&w=b"));
     final String name = result.paramName(0);
     final CharSequence value = result.paramValue(0);
     assertThat(name, is("bar"));

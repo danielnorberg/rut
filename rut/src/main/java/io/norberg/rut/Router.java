@@ -274,8 +274,25 @@ public final class Router<T> {
       this.status = SUCCESS;
     }
 
-    public int query() {
-      return captor.query();
+    /**
+     * Get query string start index. -1 if there is no query string part.
+     */
+    public int queryStart() {
+      return captor.queryStart();
+    }
+
+    /**
+     * Get query string end index. -1 if there is no query string part.
+     */
+    public int queryEnd() {
+      return captor.queryEnd();
+    }
+
+    /**
+     * Get query string. null if there is no query string part.
+     */
+    public CharSequence query() {
+      return captor.query(path);
     }
   }
 

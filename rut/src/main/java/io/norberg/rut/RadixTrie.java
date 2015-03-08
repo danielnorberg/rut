@@ -134,7 +134,7 @@ final class RadixTrie<T> {
       if (path.charAt(next) == QUERY) {
         if (captor != null) {
           captor.match(capture);
-          captor.query(next);
+          captor.query(next + 1, path.length());
         }
         return value;
       }
@@ -163,7 +163,7 @@ final class RadixTrie<T> {
         }
         if (c == QUERY) {
           if (captor != null) {
-            captor.query(i);
+            captor.query(i + 1, path.length());
           }
           break;
         }
@@ -262,7 +262,8 @@ final class RadixTrie<T> {
     private final int[] end;
     private boolean match;
     private int captured;
-    private int query;
+    private int queryStart;
+    private int queryEnd;
 
     Captor(final int captures) {
       this.start = new int[captures];
@@ -272,7 +273,8 @@ final class RadixTrie<T> {
     private void reset() {
       match = false;
       captured = 0;
-      query = -1;
+      queryStart = -1;
+      queryEnd = -1;
     }
 
     private void capture(final int i, final int start, final int end) {
@@ -323,12 +325,24 @@ final class RadixTrie<T> {
       return haystack.subSequence(start[i], end[i]);
     }
 
-    private void query(final int i) {
-      this.query = i;
+    private void query(final int start, final int end) {
+      this.queryStart = start;
+      this.queryEnd = end;
     }
 
-    public int query() {
-      return query;
+    public int queryStart() {
+      return queryStart;
+    }
+
+    public int queryEnd() {
+      return queryEnd;
+    }
+
+    public CharSequence query(final CharSequence haystack) {
+      if (queryStart == -1) {
+        return null;
+      }
+      return haystack.subSequence(queryStart, queryEnd);
     }
   }
 }
