@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import static java.lang.Math.max;
 
-class RadixTrie<T> {
+final class RadixTrie<T> {
 
   private static final byte CAPTURE = 127;
   private static final byte SLASH = '/';
@@ -25,7 +25,7 @@ class RadixTrie<T> {
     return lookup(path, null);
   }
 
-  T lookup(final CharSequence path, @Nullable final Trie.Captor captor) {
+  T lookup(final CharSequence path, @Nullable final Captor captor) {
     if (captor != null) {
       captor.reset();
     }
@@ -36,12 +36,12 @@ class RadixTrie<T> {
     return captures;
   }
 
-  Trie.Captor captor() {
+  Captor captor() {
     return captor(captures);
   }
 
-  static Trie.Captor captor(final int captures) {
-    return new Trie.Captor(captures);
+  static Captor captor(final int captures) {
+    return new Captor(captures);
   }
 
   static <T> Builder<T> builder() {
@@ -53,7 +53,7 @@ class RadixTrie<T> {
     return new Builder<T>();
   }
 
-  static class Node<T> {
+  static final class Node<T> {
 
     private final byte head;
     private final byte[] tail;
@@ -81,7 +81,7 @@ class RadixTrie<T> {
     }
 
     private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
-                                final Trie.Captor captor, final int capture) {
+                                final Captor captor, final int capture) {
       if (i >= path.length()) {
         return null;
       }
@@ -104,7 +104,7 @@ class RadixTrie<T> {
       return null;
     }
 
-    private T match(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
+    private T match(final CharSequence path, final int index, @Nullable final Captor captor,
                     final int capture) {
       // Match prefix
       final int next;
@@ -139,7 +139,7 @@ class RadixTrie<T> {
       return null;
     }
 
-    private T capture(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
+    private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
                       final int capture) {
       int i;
 
@@ -221,7 +221,7 @@ class RadixTrie<T> {
     return "RadixTrie{" + root + "}";
   }
 
-  static class Builder<T> {
+  final static class Builder<T> {
 
     private Builder() {
     }
@@ -240,6 +240,72 @@ class RadixTrie<T> {
 
     RadixTrie<T> build() {
       return trie.compress();
+    }
+  }
+
+  final static class Captor {
+
+    private final int[] start;
+    private final int[] end;
+    private boolean match;
+    private int captured;
+
+    Captor(final int captures) {
+      this.start = new int[captures];
+      this.end = new int[captures];
+    }
+
+    private void reset() {
+      match = false;
+      captured = 0;
+    }
+
+    private void capture(final int i, final int start, final int end) {
+      this.start[i] = start;
+      this.end[i] = end;
+    }
+
+    private void match(final int captured) {
+      match = true;
+      this.captured = captured;
+    }
+
+    boolean isMatch() {
+      return match;
+    }
+
+    int values() {
+      return captured;
+    }
+
+    int valueStart(final int i) {
+      if (!match) {
+        throw new IllegalStateException("not matched");
+      }
+      if (i > captured) {
+        throw new IndexOutOfBoundsException();
+      }
+      return start[i];
+    }
+
+    int valueEnd(final int i) {
+      if (!match) {
+        throw new IllegalStateException("not matched");
+      }
+      if (i > captured) {
+        throw new IndexOutOfBoundsException();
+      }
+      return end[i];
+    }
+
+    CharSequence value(final CharSequence haystack, final int i) {
+      if (!match) {
+        throw new IllegalStateException("not matched");
+      }
+      if (i > captured) {
+        throw new IndexOutOfBoundsException();
+      }
+      return haystack.subSequence(start[i], end[i]);
     }
   }
 }

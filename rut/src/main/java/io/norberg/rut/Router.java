@@ -170,14 +170,14 @@ public final class Router<T> {
    */
   public static class Result<T> {
 
-    private final Trie.Captor captor;
+    private final RadixTrie.Captor captor;
 
     private Status status;
     private Target<T> target;
     private CharSequence path;
 
     private Result(final int captures) {
-      captor = new Trie.Captor(captures);
+      captor = new RadixTrie.Captor(captures);
     }
 
     /**
