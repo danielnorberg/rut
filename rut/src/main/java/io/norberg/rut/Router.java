@@ -206,6 +206,9 @@ public final class Router<T> {
      * Get routing target, if successful.
      */
     public T target() {
+      if (target == null) {
+        throw new IllegalStateException("not matched");
+      }
       return target.target;
     }
 
@@ -220,6 +223,9 @@ public final class Router<T> {
      * Get the name of the captured path parameter at index {code i}.
      */
     public String paramName(final int i) {
+      if (target == null) {
+        throw new IllegalStateException("not matched");
+      }
       return target.paramNames[i];
     }
 
@@ -266,6 +272,10 @@ public final class Router<T> {
       this.path = path;
       this.target = target;
       this.status = SUCCESS;
+    }
+
+    public int query() {
+      return captor.query();
     }
   }
 

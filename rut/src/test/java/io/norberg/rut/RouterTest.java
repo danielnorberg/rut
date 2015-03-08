@@ -20,11 +20,12 @@ public class RouterTest {
 
     final Router.Result<String> result = router.result();
 
-    final Router.Status status1 = router.route("GET", "/foo/bar-value/baz", result);
+    final Router.Status status1 = router.route("GET", "/foo/bar-value/baz?q=a&w=b", result);
     assertThat(status1, is(Router.Status.SUCCESS));
     assertThat(result.status(), is(Router.Status.SUCCESS));
     assertThat(result.isSuccess(), is(true));
     assertThat(result.target(), is(target));
+    assertThat(result.query(), is(18));
     final String name = result.paramName(0);
     final CharSequence value = result.paramValue(0);
     assertThat(name, is("bar"));

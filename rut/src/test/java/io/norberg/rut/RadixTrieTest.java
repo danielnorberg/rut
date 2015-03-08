@@ -106,8 +106,18 @@ public class RadixTrieTest {
 
   private void verifyPaths(final RadixTrie<String> rdx, final List<String> paths) {
     for (final String path : paths) {
+      final RadixTrie.Captor captor = rdx.captor();
       assertThat(rdx.lookup(path), is(path));
-      assertThat(rdx.lookup(path + "?query"), is(path));
+      assertThat(rdx.lookup(path, captor), is(path));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.query(), is(path.indexOf('?')));
+
+      final String pathWithQuery = path + "?query";
+      assertThat(rdx.lookup(pathWithQuery), is(path));
+      assertThat(rdx.lookup(pathWithQuery, captor), is(path));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.query(), is(pathWithQuery.indexOf('?')));
+
       assertThat(rdx.captures(), is(captures(paths)));
     }
   }

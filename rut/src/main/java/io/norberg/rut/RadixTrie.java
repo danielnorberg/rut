@@ -123,9 +123,18 @@ final class RadixTrie<T> {
       assert next >= index;
 
       // Terminal?
-      if (next == path.length() || path.charAt(next) == QUERY) {
+      if (next == path.length()) {
         if (captor != null) {
           captor.match(capture);
+        }
+        return value;
+      }
+
+      // Query?
+      if (path.charAt(next) == QUERY) {
+        if (captor != null) {
+          captor.match(capture);
+          captor.query(next);
         }
         return value;
       }
@@ -142,16 +151,20 @@ final class RadixTrie<T> {
     private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
                       final int capture) {
       int i;
+      char c = 0;
 
-      // Find end
+      // Find capture bound
       boolean terminal = true;
       for (i = index; i < path.length(); i++) {
-        final char c = path.charAt(i);
+        c = path.charAt(i);
         if (c == SLASH) {
           terminal = false;
           break;
         }
         if (c == QUERY) {
+          if (captor != null) {
+            captor.query(i);
+          }
           break;
         }
       }
@@ -249,6 +262,7 @@ final class RadixTrie<T> {
     private final int[] end;
     private boolean match;
     private int captured;
+    private int query;
 
     Captor(final int captures) {
       this.start = new int[captures];
@@ -258,6 +272,7 @@ final class RadixTrie<T> {
     private void reset() {
       match = false;
       captured = 0;
+      query = -1;
     }
 
     private void capture(final int i, final int start, final int end) {
@@ -306,6 +321,14 @@ final class RadixTrie<T> {
         throw new IndexOutOfBoundsException();
       }
       return haystack.subSequence(start[i], end[i]);
+    }
+
+    private void query(final int i) {
+      this.query = i;
+    }
+
+    public int query() {
+      return query;
     }
   }
 }
