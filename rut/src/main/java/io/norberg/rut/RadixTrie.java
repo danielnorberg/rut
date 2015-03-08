@@ -86,13 +86,15 @@ class RadixTrie<T> {
         return null;
       }
 
+      final char c = path.charAt(i);
+
       Node<T> node = root;
       while (node != null) {
-        final T value;
-        if (node.head == CAPTURE) {
-          value = node.capture(path, i, captor, capture);
-        } else {
+        T value = null;
+        if (node.head == c) {
           value = node.match(path, i, captor, capture);
+        } else if (node.head == CAPTURE) {
+          value = node.capture(path, i, captor, capture);
         }
         if (value != null) {
           return value;
@@ -106,9 +108,7 @@ class RadixTrie<T> {
                     final int capture) {
       // Match prefix
       final int next;
-      if (head != path.charAt(index)) {
-        return null;
-      } else if (tail == null) {
+      if (tail == null) {
         next = index + 1;
       } else if (index + 1 + tail.length > path.length()) {
         return null;
