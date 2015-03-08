@@ -4,3 +4,5 @@ jdk:
   - oraclejdk7
   - openjdk6
   - openjdk7
+install:
+script: mvn clean package
