@@ -46,6 +46,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jmh.version>1.6.1</jmh.version>
     <javac.target>1.6</javac.target>
+    <coveralls.token>NMdOvhUZp5nBfOkLNcaLYau8G3jGUaSCY</coveralls.token>
   </properties>
 
   <build>
@@ -102,6 +103,25 @@
           <serverId>ossrh</serverId>
           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eluder.coveralls</groupId>
+        <artifactId>coveralls-maven-plugin</artifactId>
+        <version>3.0.1</version>
+        <configuration>
+          <repoToken>${coveralls.token}</repoToken>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+          <format>xml</format>
+          <maxmem>256m</maxmem>
+          <!-- aggregated reports for multi-module projects -->
+          <aggregate>true</aggregate>
         </configuration>
       </plugin>
     </plugins>
