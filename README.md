@@ -7,6 +7,7 @@ Pronounced as *route* (/ru:t/).
 
 [![Build Status](https://travis-ci.org/danielnorberg/rut.svg?branch=master)](https://travis-ci.org/danielnorberg/rut)
 
+[![Coverage Status](https://coveralls.io/repos/danielnorberg/rut/badge.svg)](https://coveralls.io/r/danielnorberg/rut)
 
 What
 ----
