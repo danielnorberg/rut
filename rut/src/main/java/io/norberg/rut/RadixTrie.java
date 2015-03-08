@@ -92,7 +92,7 @@ class RadixTrie<T> {
         if (node.head == CAPTURE) {
           value = node.capture(path, i, captor, capture);
         } else {
-          value = node.lookup(path, i, captor, capture);
+          value = node.match(path, i, captor, capture);
         }
         if (value != null) {
           return value;
@@ -102,8 +102,8 @@ class RadixTrie<T> {
       return null;
     }
 
-    private T lookup(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
-                     final int capture) {
+    private T match(final CharSequence path, final int index, @Nullable final Trie.Captor captor,
+                    final int capture) {
       // Match prefix
       final int next;
       if (head != path.charAt(index)) {
