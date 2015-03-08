@@ -82,3 +82,9 @@ mvn clean package
 java -jar rut-benchmark/target/rut-benchmark.jar
 ```
 
+```
+Benchmark                           Mode  Cnt         Score        Error  Units
+RoutingBenchmark.radixTreeRouting  thrpt  200  10394965.771 ± 107132.302  ops/s
+RoutingBenchmark.regexRouting      thrpt  200    911995.189 ±   5912.181  ops/s
+```
+
