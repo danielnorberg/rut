@@ -254,6 +254,13 @@ final class RadixTrie<T> {
     RadixTrie<T> build() {
       return trie.compress();
     }
+
+    @Override
+    public String toString() {
+      return "Builder{" +
+             "trie=" + trie +
+             '}';
+    }
   }
 
   final static class Captor {

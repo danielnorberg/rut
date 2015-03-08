@@ -6,7 +6,9 @@ import java.util.List;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
@@ -82,6 +84,18 @@ public class RadixTrieTest {
     assertThat(rdx.lookup("ab"), is("ab"));
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyUnclosedCaptureFails() {
+    RadixTrie.builder(String.class)
+        .insert("a<", "a<");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyEmptyPathFails() {
+    RadixTrie.builder(String.class)
+        .insert("", "");
+  }
+
   @Test
   public void testPaths() {
     final List<String> paths = asList(
@@ -101,6 +115,7 @@ public class RadixTrieTest {
     for (int i = 0; i < paths.size(); i++) {
       final String path = paths.get(i);
       rdx = rdx.insert(path, path);
+      assertThat(rdx.toString(), not(isEmptyOrNullString()));
       verifyPaths(rdx.build(), paths.subList(0, i + 1));
     }
   }
@@ -126,6 +141,8 @@ public class RadixTrieTest {
       assertThat(captor.query(pathWithQuery).toString(), is(query));
 
       assertThat(rdx.captures(), is(captures(paths)));
+
+      assertThat(rdx.toString(), not(isEmptyOrNullString()));
     }
   }
 
