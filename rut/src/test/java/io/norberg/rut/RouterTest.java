@@ -16,11 +16,13 @@ public class RouterTest {
 
   @Test
   public void testRouting() {
-    final Router.Builder<String> builder = Router.builder();
-    final String target = "target";
-    builder.route("GET", "/foo/<bar>/baz", target);
+    final String getTarget = "target";
+    final String postTarget = "target";
 
-    final Router<String> router = builder.build();
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/foo/<bar>/baz", getTarget)
+        .route("POST", "/foo/<bar>/baz", postTarget)
+        .build();
 
     final Router.Result<String> result = router.result();
 
@@ -28,9 +30,13 @@ public class RouterTest {
     assertThat(status1, is(Router.Status.SUCCESS));
     assertThat(result.status(), is(Router.Status.SUCCESS));
     assertThat(result.isSuccess(), is(true));
-    assertThat(result.target(), is(target));
+    assertThat(result.target(), is(getTarget));
     assertThat(result.queryStart(), is(19));
+    assertThat(result.queryEnd(), is(26));
     assertThat(result.query().toString(), is("q=a&w=b"));
+    assertThat(result.params(), is(1));
+    assertThat(result.paramValueStart(0), is(5));
+    assertThat(result.paramValueEnd(0), is(14));
     final String name = result.paramName(0);
     final CharSequence value = result.paramValue(0);
     assertThat(name, is("bar"));
@@ -59,6 +65,21 @@ public class RouterTest {
     exception.expect(IllegalStateException.class);
 
     result.target();
+  }
+
+
+  @Test
+  public void verifyResultParamNameThrowsIfNotSuccessful() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/foo", "foo")
+        .build();
+
+    final Router.Result<String> result = router.result();
+    router.route("GET", "/bar", result);
+
+    exception.expect(IllegalStateException.class);
+
+    result.paramName(0);
   }
 
 
