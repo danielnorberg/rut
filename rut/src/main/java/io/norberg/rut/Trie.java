@@ -1,5 +1,6 @@
 package io.norberg.rut;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +11,9 @@ import static java.util.Collections.reverse;
 
 final class Trie<T> {
 
-  private static final char CAPTURE = 127;
+  private static final Charset ASCII = Charset.forName("US-ASCII");
+
+  private static final char CAPTURE = 127; // DEL
 
   private final Map<Character, Node<T>> roots = new TreeMap<Character, Node<T>>();
 
@@ -99,7 +102,7 @@ final class Trie<T> {
       final RadixTrie.Node<T> edge = compressEdges(end.edges);
 
       final byte head = (byte) prefix.charAt(0);
-      final byte[] tail = prefix.length() == 1 ? null : asciiBytes(prefix, 1);
+      final byte[] tail = prefix.length() == 1 ? null : prefix.substring(1).getBytes(ASCII);
 
       return new RadixTrie.Node<T>(head, tail, sibling, edge, end.value);
     }
@@ -108,7 +111,7 @@ final class Trie<T> {
       Node<T> node = this;
       while (true) {
         prefix.append(node.c);
-        if (node.c == CAPTURE || node.value != null || node.edges.size() != 1) {
+        if (node.value != null || node.edges.size() != 1) {
           return node;
         }
         final Node<T> next = node.edges.values().iterator().next();
@@ -177,18 +180,5 @@ final class Trie<T> {
       }
     }
     return -1;
-  }
-
-  private static byte[] asciiBytes(final CharSequence sequence, final int from) {
-    final int length = sequence.length() - from;
-    final byte[] chars = new byte[length];
-    for (int i = 0; i < length; i++) {
-      final char c = sequence.charAt(from + i);
-      if (c > 127) {
-        throw new IllegalArgumentException();
-      }
-      chars[i] = (byte) c;
-    }
-    return chars;
   }
 }
