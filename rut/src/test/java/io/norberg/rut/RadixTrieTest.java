@@ -197,6 +197,11 @@ public class RadixTrieTest {
     new Node<String>((byte) 1, null, null, null, null);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyNonAsciiInsertThrows() {
+    RadixTrie.builder(String.class).insert("" + (char) 128, "foo");
+  }
+
   @Test
   public void testPaths() {
     final List<String> paths = asList(
@@ -210,7 +215,8 @@ public class RadixTrieTest {
         "/b/c",
         "/c/<d>",
         "/c/d/e",
-        "/<a>/b/<c>/<d>/e"
+        "/<a>/b/<c>/<d>/e",
+        "<foo>/bar"
     );
     RadixTrie.Builder<String> rdx = RadixTrie.builder();
     for (int i = 0; i < paths.size(); i++) {
