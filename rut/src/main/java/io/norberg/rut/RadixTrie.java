@@ -70,7 +70,13 @@ final class RadixTrie<T> {
       this.value = value;
 
       // Check that siblings are ordered
-      assert sibling == null || head < sibling.head;
+      if (sibling != null && head >= sibling.head) {
+        throw new IllegalArgumentException("unordered sibling");
+      }
+
+      if (value == null && edge == null) {
+        throw new IllegalArgumentException("terminal node without value");
+      }
     }
 
     private int captures() {
@@ -120,7 +126,6 @@ final class RadixTrie<T> {
         }
         next = index + 1 + tail.length;
       }
-      assert next >= index;
 
       // Terminal?
       if (next == path.length()) {
@@ -306,7 +311,7 @@ final class RadixTrie<T> {
       if (!match) {
         throw new IllegalStateException("not matched");
       }
-      if (i > captured) {
+      if (i >= captured) {
         throw new IndexOutOfBoundsException();
       }
       return start[i];
@@ -316,7 +321,7 @@ final class RadixTrie<T> {
       if (!match) {
         throw new IllegalStateException("not matched");
       }
-      if (i > captured) {
+      if (i >= captured) {
         throw new IndexOutOfBoundsException();
       }
       return end[i];
@@ -326,7 +331,7 @@ final class RadixTrie<T> {
       if (!match) {
         throw new IllegalStateException("not matched");
       }
-      if (i > captured) {
+      if (i >= captured) {
         throw new IndexOutOfBoundsException();
       }
       return haystack.subSequence(start[i], end[i]);

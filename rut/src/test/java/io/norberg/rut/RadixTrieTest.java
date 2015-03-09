@@ -1,8 +1,12 @@
 package io.norberg.rut;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.List;
+
+import io.norberg.rut.RadixTrie.Node;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
@@ -13,6 +17,8 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
 public class RadixTrieTest {
+
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testSingleRoot() {
@@ -36,6 +42,74 @@ public class RadixTrieTest {
         .insert("aaa<value>bbb", "foobar")
         .build();
     assertThat(rdx.lookup("aaabb"), is(nullValue()));
+  }
+
+  @Test
+  public void testCaptureNoMatchCaptorValueThrows() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("aaa<value>bbb", "foobar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    rdx.lookup("aaabb", captor);
+    exception.expect(IllegalStateException.class);
+    captor.value("aaabb", 0);
+  }
+
+  @Test
+  public void testCaptureNoMatchCaptorValueStartThrows() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("aaa<value>bbb", "foobar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    rdx.lookup("aaabb", captor);
+    exception.expect(IllegalStateException.class);
+    captor.valueStart(0);
+  }
+
+  @Test
+  public void testCaptureNoMatchCaptorValueEndThrows() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("aaa<value>bbb", "foobar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    rdx.lookup("aaabb", captor);
+    exception.expect(IllegalStateException.class);
+    captor.valueEnd(0);
+  }
+
+  @Test
+  public void testCaptureMatchCaptorValueIndexOutOfBoundsThrows() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("a<value>b", "foobar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    rdx.lookup("afoob", captor);
+    exception.expect(IndexOutOfBoundsException.class);
+    captor.value("afoob", 1);
+  }
+
+
+  @Test
+  public void testCaptureMatchCaptorValueStartIndexOutOfBoundsThrows() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("a<value>b", "foobar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    rdx.lookup("afoob", captor);
+    exception.expect(IndexOutOfBoundsException.class);
+    captor.valueStart(1);
+  }
+
+
+  @Test
+  public void testCaptureMatchCaptorValueEndIndexOutOfBoundsThrows() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("a<value>b", "foobar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    rdx.lookup("afoob", captor);
+    exception.expect(IndexOutOfBoundsException.class);
+    captor.valueEnd(1);
   }
 
   @Test
@@ -112,6 +186,17 @@ public class RadixTrieTest {
         .insert("", "");
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyUnorderedSiblingsThrow() {
+    final Node<String> sibling = new Node<String>((byte) 1, null, null, null, "foo");
+    new Node<String>((byte) 2, null, sibling, null, "bar");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyTerminalNodeWithoutValueThrows() {
+    new Node<String>((byte) 1, null, null, null, null);
+  }
+
   @Test
   public void testPaths() {
     final List<String> paths = asList(
@@ -146,6 +231,9 @@ public class RadixTrieTest {
       assertThat(captor.queryStart(), is(-1));
       assertThat(captor.queryEnd(), is(-1));
       assertThat(captor.query(path), is(nullValue()));
+
+      final String pathWithSlash = path + '/';
+      assertThat(rdx.lookup(pathWithSlash), is(nullValue()));
 
       final String query = "query";
       final String pathWithQuery = path + "?" + query;
