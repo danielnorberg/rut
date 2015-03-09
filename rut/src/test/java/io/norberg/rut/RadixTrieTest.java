@@ -23,6 +23,14 @@ public class RadixTrieTest {
   }
 
   @Test
+  public void testSingleRootNoMatch() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("aaa", "aaa")
+        .build();
+    assertThat(rdx.lookup("aa"), is(nullValue()));
+  }
+
+  @Test
   public void testSingleRootCapture() {
     RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("<a>", "<a>")
