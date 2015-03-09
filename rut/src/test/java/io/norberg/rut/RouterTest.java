@@ -6,6 +6,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
+import static io.norberg.rut.Router.Status.SUCCESS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -43,8 +45,8 @@ public class RouterTest {
     assertThat(value.toString(), is("bar-value"));
 
     final Router.Status status2 = router.route("DELETE", "/foo/bar/baz", result);
-    assertThat(status2, is(Router.Status.METHOD_NOT_ALLOWED));
-    assertThat(result.status(), is(Router.Status.METHOD_NOT_ALLOWED));
+    assertThat(status2, is(METHOD_NOT_ALLOWED));
+    assertThat(result.status(), is(METHOD_NOT_ALLOWED));
     assertThat(result.isSuccess(), is(false));
 
     final Router.Status status3 = router.route("GET", "/non/existent/path", result);
@@ -82,5 +84,33 @@ public class RouterTest {
     result.paramName(0);
   }
 
+  @Test
+  public void testRouterBuilderWithoutClassArgument() {
+    final Router.Builder<String> b = Router.builder();
+    b.route("GET", "foo", "foo");
+    b.build();
+  }
+
+  @Test
+  public void verifyWrongMethodNotAllowed() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/foo", "/foo")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("PUT", "/foo", result), is(METHOD_NOT_ALLOWED));
+    assertThat(router.route("GGG", "/foo", result), is(METHOD_NOT_ALLOWED));
+  }
+
+  @SuppressWarnings("RedundantStringConstructorCall")
+  @Test
+  public void verifyNonIdenticalStringMatches() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/foo", "/foo")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route(String.valueOf(new char[]{'G', 'E', 'T'}),
+                            String.valueOf(new char[]{'/', 'f', 'o', 'o'}), result),
+               is(SUCCESS));
+  }
 
 }
