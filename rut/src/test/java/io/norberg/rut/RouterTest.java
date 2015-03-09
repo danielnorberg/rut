@@ -1,6 +1,8 @@
 package io.norberg.rut;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -9,6 +11,8 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RouterTest {
+
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testRouting() {
@@ -41,6 +45,20 @@ public class RouterTest {
     assertThat(status3, is(Router.Status.NOT_FOUND));
     assertThat(result.status(), is(Router.Status.NOT_FOUND));
     assertThat(result.isSuccess(), is(false));
+  }
+
+  @Test
+  public void verifyResultTargetThrowsIfNotSuccessful() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/foo", "foo")
+        .build();
+
+    final Router.Result<String> result = router.result();
+    router.route("GET", "/bar", result);
+
+    exception.expect(IllegalStateException.class);
+
+    result.target();
   }
 
 
