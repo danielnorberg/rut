@@ -31,6 +31,14 @@ public class RadixTrieTest {
   }
 
   @Test
+  public void testCaptureSuffixMismatch() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("aaa<value>bbb", "foobar")
+        .build();
+    assertThat(rdx.lookup("aaabb"), is(nullValue()));
+  }
+
+  @Test
   public void testSingleRootCapture() {
     RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("<a>", "<a>")
