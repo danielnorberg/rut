@@ -63,7 +63,8 @@ for (int i = 0; i < result.params(); i++) {
 out.println("query: " + result.query());
 ```
 
-Output: ```
+Output: 
+```
 handler: create user blog post
 param 0: user=foo-user
 param 1: blog=bar-blog
