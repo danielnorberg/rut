@@ -58,7 +58,6 @@ for (int i = 0; i < result.params(); i++) {
 // Print query
 out.println("query: " + result.query());
 
-
 // List all allowed methods
 out.println("allowed methods: " + result.allowedMethods());
 ```
