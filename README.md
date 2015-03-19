@@ -9,6 +9,8 @@ Pronounced as *route* (/ru:t/).
 
 [![Coverage Status](https://coveralls.io/repos/danielnorberg/rut/badge.svg?branch=master)](https://coveralls.io/r/danielnorberg/rut?branch=master)
 
+[![status](https://sourcegraph.com/api/repos/github.com/danielnorberg/rut/.badges/status.svg)](https://sourcegraph.com/github.com/danielnorberg/rut)
+
 What
 ----
 
