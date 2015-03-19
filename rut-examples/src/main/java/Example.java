@@ -40,6 +40,9 @@ public class Example {
 
     // Print query
     out.println("query: " + result.query());
+
+    // List all allowed methods
+    out.println("allowed methods: " + result.allowedMethods());
   }
 
   private static Handler handler(final String description) {
