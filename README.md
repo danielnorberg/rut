@@ -1,7 +1,7 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.norberg/rut/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.norberg/rut) [![Build Status](https://travis-ci.org/danielnorberg/rut.svg?branch=master)](https://travis-ci.org/danielnorberg/rut) [![Coverage Status](https://coveralls.io/repos/danielnorberg/rut/badge.svg?branch=master)](https://coveralls.io/r/danielnorberg/rut?branch=master) [![docs examples](https://sourcegraph.com/api/repos/github.com/danielnorberg/rut/.badges/docs-examples.svg)](https://sourcegraph.com/github.com/danielnorberg/rut)
-
 rut
 ===
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.norberg/rut/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.norberg/rut) [![Build Status](https://travis-ci.org/danielnorberg/rut.svg?branch=master)](https://travis-ci.org/danielnorberg/rut) [![Coverage Status](https://coveralls.io/repos/danielnorberg/rut/badge.svg?branch=master)](https://coveralls.io/r/danielnorberg/rut?branch=master) [![docs examples](https://sourcegraph.com/api/repos/github.com/danielnorberg/rut/.badges/docs-examples.svg)](https://sourcegraph.com/github.com/danielnorberg/rut)
 
 Pronounced as *route* (/ru:t/).
 
