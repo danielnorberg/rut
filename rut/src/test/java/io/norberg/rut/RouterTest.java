@@ -8,8 +8,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
 import static io.norberg.rut.Router.Status.SUCCESS;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RouterTest {
@@ -39,6 +42,8 @@ public class RouterTest {
     assertThat(result.params(), is(1));
     assertThat(result.paramValueStart(0), is(5));
     assertThat(result.paramValueEnd(0), is(14));
+    assertThat(result.allowedMethods(), hasSize(2));
+    assertThat(result.allowedMethods(), containsInAnyOrder("GET", "POST"));
     final String name = result.paramName(0);
     final CharSequence value = result.paramValue(0);
     assertThat(name, is("bar"));
@@ -47,12 +52,18 @@ public class RouterTest {
     final Router.Status status2 = router.route("DELETE", "/foo/bar/baz", result);
     assertThat(status2, is(METHOD_NOT_ALLOWED));
     assertThat(result.status(), is(METHOD_NOT_ALLOWED));
+    assertThat(result.allowedMethods(), hasSize(2));
+    assertThat(result.allowedMethods(), containsInAnyOrder("GET", "POST"));
     assertThat(result.isSuccess(), is(false));
 
     final Router.Status status3 = router.route("GET", "/non/existent/path", result);
     assertThat(status3, is(Router.Status.NOT_FOUND));
     assertThat(result.status(), is(Router.Status.NOT_FOUND));
     assertThat(result.isSuccess(), is(false));
+    try {
+      result.allowedMethods();
+      fail();
+    } catch (IllegalStateException ignored) {}
   }
 
   @Test
@@ -94,11 +105,20 @@ public class RouterTest {
   @Test
   public void verifyWrongMethodNotAllowed() {
     final Router<String> router = Router.builder(String.class)
-        .route("GET", "/foo", "/foo")
+        .route("GET", "/foo", "foo-get")
+        .route("POST", "/foo", "foo-post")
         .build();
     final Router.Result<String> result = router.result();
+
     assertThat(router.route("PUT", "/foo", result), is(METHOD_NOT_ALLOWED));
+    assertThat(result.status(), is(METHOD_NOT_ALLOWED));
+    assertThat(result.allowedMethods(), hasSize(2));
+    assertThat(result.allowedMethods(), containsInAnyOrder("GET", "POST"));
+
     assertThat(router.route("GGG", "/foo", result), is(METHOD_NOT_ALLOWED));
+    assertThat(result.status(), is(METHOD_NOT_ALLOWED));
+    assertThat(result.allowedMethods(), hasSize(2));
+    assertThat(result.allowedMethods(), containsInAnyOrder("GET", "POST"));
   }
 
   @SuppressWarnings("RedundantStringConstructorCall")

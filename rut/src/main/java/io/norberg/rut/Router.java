@@ -1,5 +1,10 @@
 package io.norberg.rut;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
 import static io.norberg.rut.Router.Status.NOT_FOUND;
 import static io.norberg.rut.Router.Status.SUCCESS;
@@ -41,16 +46,13 @@ public final class Router<T> {
   public Status route(final CharSequence method, final CharSequence path, final Result<T> result) {
     final Route<T> route = trie.lookup(path, result.captor);
     if (route == null) {
-      result.failure(NOT_FOUND);
-      return NOT_FOUND;
+      return result.notFound().status();
     }
     final Target<T> target = route.lookup(method);
     if (target == null) {
-      result.failure(METHOD_NOT_ALLOWED);
-      return METHOD_NOT_ALLOWED;
+      return result.notAllowed(route).status();
     }
-    result.success(path, target);
-    return SUCCESS;
+    return result.success(path, route, target).status();
 
   }
 
@@ -122,8 +124,7 @@ public final class Router<T> {
      *
      * @param method A method that should be accepted for the route.
      * @param path   The path of the route.
-     * @param target A routing target that will be returned when requests are successfully routed
-     *               to
+     * @param target A routing target that will be returned when requests are successfully routed to
      *               this route.
      */
     public Builder<T> route(final String method, final String path, final T target) {
@@ -173,6 +174,7 @@ public final class Router<T> {
     private final RadixTrie.Captor captor;
 
     private Status status;
+    private Route<T> route;
     private Target<T> target;
     private CharSequence path;
 
@@ -257,21 +259,37 @@ public final class Router<T> {
     }
 
     /**
-     * Signal a routing failure.
+     * Signal a route found but method not allowed.
      */
-    private void failure(final Status status) {
-      this.path = null;
+    private Result<T> notAllowed(final Route<T> route) {
+      this.status = METHOD_NOT_ALLOWED;
+      this.route = route;
       this.target = null;
-      this.status = status;
+      this.path = null;
+      return this;
+    }
+
+    /**
+     * Signal no route found.
+     */
+    private Result<T> notFound() {
+      this.status = NOT_FOUND;
+      this.route = null;
+      this.target = null;
+      this.path = null;
+      return this;
     }
 
     /**
      * Signal a routing success.
      */
-    private void success(final CharSequence path, final Target<T> target) {
-      this.path = path;
-      this.target = target;
+    private Result<T> success(final CharSequence path, final Route<T> route,
+                              final Target<T> target) {
       this.status = SUCCESS;
+      this.route = route;
+      this.target = target;
+      this.path = path;
+      return this;
     }
 
     /**
@@ -294,6 +312,18 @@ public final class Router<T> {
     public CharSequence query() {
       return captor.query(path);
     }
+
+    /**
+     * Get all allowed methods for the route if {@link #status()} is {@link Status#SUCCESS} or
+     * {@link Status#METHOD_NOT_ALLOWED}. Returns an empty collection if {@link #status()} is {@link
+     * Status#NOT_FOUND}.
+     */
+    public Collection<String> allowedMethods() {
+      if (route == null) {
+        throw new IllegalStateException("not matched");
+      }
+      return route.methods();
+    }
   }
 
   /**
@@ -304,11 +334,13 @@ public final class Router<T> {
     private final String method;
     private final Target<T> target;
     private final Route<T> next;
+    private final Collection<String> methods;
 
     private Route(final String method, final Target<T> target, final Route<T> next) {
       this.method = method;
       this.target = target;
       this.next = next;
+      this.methods = methods0();
     }
 
     /**
@@ -358,6 +390,26 @@ public final class Router<T> {
         }
       }
       return true;
+    }
+
+    /**
+     * Get a {@link Collection} of {@link String} with all methods allowed by this endpoint.
+     */
+    public Collection<String> methods() {
+      return methods;
+    }
+
+    /**
+     * Create a list of all methods allowed by this endpoint.
+     */
+    private Collection<String> methods0() {
+      final List<String> methods = new ArrayList<String>();
+      Route<T> route = this;
+      while (route != null) {
+        methods.add(route.method);
+        route = route.next;
+      }
+      return Collections.unmodifiableList(methods);
     }
   }
 }
