@@ -175,6 +175,17 @@ public class RadixTrieTest {
     assertThat(rdx.lookup("ab"), is("ab"));
   }
 
+  @Test
+  public void testCaptorAtSplitDoesNotMatch() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("a1", "a1")
+        .insert("a2", "a2")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    assertThat(rdx.lookup("a?q", captor), is(nullValue()));
+    assertThat(captor.isMatch(), is(false));
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void verifyUnclosedCaptureFails() {
     RadixTrie.builder(String.class)
