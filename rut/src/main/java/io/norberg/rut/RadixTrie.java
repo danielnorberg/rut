@@ -112,15 +112,16 @@ final class RadixTrie<T> {
       final int next;
       if (tail == null) {
         next = index + 1;
-      } else if (index + 1 + tail.length > path.length()) {
-        return null;
       } else {
+        next = index + 1 + tail.length;
+        if (next > path.length()) {
+          return null;
+        }
         for (int i = 0; i < tail.length; i++) {
           if (tail[i] != path.charAt(index + 1 + i)) {
             return null;
           }
         }
-        next = index + 1 + tail.length;
       }
 
       // Terminal?
