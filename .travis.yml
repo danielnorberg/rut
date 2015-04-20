@@ -11,7 +11,7 @@ jdk:
   - openjdk6
   - openjdk7
 
-install:
+install: true
 
 script: mvn clean package
 
