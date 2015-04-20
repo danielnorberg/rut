@@ -176,7 +176,7 @@ public class RadixTrieTest {
   }
 
   @Test
-  public void testCaptorAtSplitDoesNotMatch() {
+  public void testQueryAtSplitDoesNotMatch() {
     RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a1", "a1")
         .insert("a2", "a2")
