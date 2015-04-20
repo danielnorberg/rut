@@ -186,6 +186,17 @@ public class RadixTrieTest {
     assertThat(captor.isMatch(), is(false));
   }
 
+  @Test
+  public void testEndAtSplitDoesNotMatch() {
+    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("a1", "a1")
+        .insert("a2", "a2")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+    assertThat(rdx.lookup("a", captor), is(nullValue()));
+    assertThat(captor.isMatch(), is(false));
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void verifyUnclosedCaptureFails() {
     RadixTrie.builder(String.class)
