@@ -63,7 +63,7 @@ public class RoutingBenchmark {
   }
 
   @Benchmark
-  public Pattern regexRouting() throws InterruptedException {
+  public Pattern regexRouting() {
     for (final Pattern pattern : uriPatterns) {
       if (pattern.matcher(path).matches()) {
         return pattern;

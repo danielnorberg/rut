@@ -4,7 +4,7 @@ import static java.lang.System.out;
 
 public class Example {
 
-  public static interface Handler {
+  public interface Handler {
 
   }
 

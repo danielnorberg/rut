@@ -139,11 +139,11 @@ final class Trie<T> {
            '}';
   }
 
-  public static interface Visitor<T> {
+  public interface Visitor<T> {
 
-    public void capture(final int i, final CharSequence s);
+    void capture(final int i, final CharSequence s);
 
-    public T finish(final int captures, final T currentValue);
+    T finish(final int captures, final T currentValue);
   }
 
   /**

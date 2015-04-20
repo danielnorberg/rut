@@ -14,6 +14,7 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class RadixTrieTest {
@@ -248,7 +249,9 @@ public class RadixTrieTest {
       assertThat(captor.isMatch(), is(true));
       assertThat(captor.queryStart(), is(path.length() + 1));
       assertThat(captor.queryEnd(), is(pathWithQuery.length()));
-      assertThat(captor.query(pathWithQuery).toString(), is(query));
+      final CharSequence queryParams = captor.query(pathWithQuery);
+      assertNotNull(queryParams);
+      assertThat(queryParams.toString(), is(query));
 
       assertThat(rdx.captures(), is(captures(paths)));
 

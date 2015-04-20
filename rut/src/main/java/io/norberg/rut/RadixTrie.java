@@ -156,7 +156,7 @@ final class RadixTrie<T> {
     private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
                       final int capture) {
       int i;
-      char c = 0;
+      char c;
 
       // Find capture bound
       boolean terminal = true;
