@@ -184,6 +184,8 @@ public class RadixTrieTest {
     final RadixTrie.Captor captor = rdx.captor();
     assertThat(rdx.lookup("a?q", captor), is(nullValue()));
     assertThat(captor.isMatch(), is(false));
+    assertThat(captor.queryStart(), is(-1));
+    assertThat(captor.queryEnd(), is(-1));
   }
 
   @Test

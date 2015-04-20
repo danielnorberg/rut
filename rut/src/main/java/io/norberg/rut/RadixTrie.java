@@ -126,14 +126,18 @@ final class RadixTrie<T> {
 
       // Terminal?
       if (next == path.length()) {
-        captor.match(capture);
+        if (value != null) {
+          captor.match(capture);
+        }
         return value;
       }
 
       // Query?
-      if (value != null && path.charAt(next) == QUERY) {
-        captor.match(capture);
-        captor.query(next + 1, path.length());
+      if (path.charAt(next) == QUERY) {
+        if (value != null) {
+          captor.query(next + 1, path.length());
+          captor.match(capture);
+        }
         return value;
       }
 
