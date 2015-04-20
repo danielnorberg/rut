@@ -240,4 +240,61 @@ public class RouterTest {
     assertThat(result.paramValueDecoded(0).toString(), is("foo-" + decoded + "-bar-" + decoded));
   }
 
+  /**
+   * Verify that it's possible to get an optional trailing slash routing behavior simply by adding
+   * routes both with and without trailing slash.
+   */
+  @Test
+  public void testOptionalTrailingSlash() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/foo", "foo-without-trailing-slash")
+        .route("GET", "/foo/", "foo-with-trailing-slash")
+        .route("GET", "/foo/<param>", "foo-without-trailing-slash-param")
+        .route("GET", "/foo/<param>/", "foo-with-trailing-slash-param")
+        .build();
+
+    final Router.Result<String> result = router.result();
+
+    assertThat(router.route("GET", "/foo", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-without-trailing-slash"));
+    assertThat(result.params(), is(0));
+    assertThat(result.query(), is(nullValue()));
+
+    assertThat(router.route("GET", "/foo?query", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-without-trailing-slash"));
+    assertThat(result.params(), is(0));
+    assertThat(result.query().toString(), is("query"));
+
+    assertThat(router.route("GET", "/foo/", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-with-trailing-slash"));
+    assertThat(result.params(), is(0));
+    assertThat(result.query(), is(nullValue()));
+
+    assertThat(router.route("GET", "/foo/?query", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-with-trailing-slash"));
+    assertThat(result.params(), is(0));
+    assertThat(result.query().toString(), is("query"));
+
+    assertThat(router.route("GET", "/foo/bar", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-without-trailing-slash-param"));
+    assertThat(result.params(), is(1));
+    assertThat(result.paramValue(0).toString(), is("bar"));
+    assertThat(result.query(), is(nullValue()));
+
+    assertThat(router.route("GET", "/foo/bar?query", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-without-trailing-slash-param"));
+    assertThat(result.params(), is(1));
+    assertThat(result.paramValue(0).toString(), is("bar"));
+    assertThat(result.query().toString(), is("query"));
+
+    assertThat(router.route("GET", "/foo/bar/", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-with-trailing-slash-param"));
+    assertThat(result.paramValue(0).toString(), is("bar"));
+    assertThat(result.query(), is(nullValue()));
+
+    assertThat(router.route("GET", "/foo/bar/?query", result), is(SUCCESS));
+    assertThat(result.target(), is("foo-with-trailing-slash-param"));
+    assertThat(result.paramValue(0).toString(), is("bar"));
+    assertThat(result.query().toString(), is("query"));
+  }
 }
