@@ -3,8 +3,6 @@ package io.norberg.rut;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import static java.lang.Math.max;
 
 final class RadixTrie<T> {
@@ -22,13 +20,11 @@ final class RadixTrie<T> {
   }
 
   T lookup(final CharSequence path) {
-    return lookup(path, null);
+    return lookup(path, captor());
   }
 
-  T lookup(final CharSequence path, @Nullable final Captor captor) {
-    if (captor != null) {
-      captor.reset();
-    }
+  T lookup(final CharSequence path, final Captor captor) {
+    captor.reset();
     return Node.lookup(root, path, 0, captor, 0);
   }
 
@@ -88,7 +84,7 @@ final class RadixTrie<T> {
 
     private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
                                 final Captor captor, final int capture) {
-      if (i >= path.length()) {
+      if (i == path.length()) {
         return null;
       }
 
@@ -110,7 +106,7 @@ final class RadixTrie<T> {
       return null;
     }
 
-    private T match(final CharSequence path, final int index, @Nullable final Captor captor,
+    private T match(final CharSequence path, final int index, final Captor captor,
                     final int capture) {
       // Match prefix
       final int next;
@@ -129,18 +125,14 @@ final class RadixTrie<T> {
 
       // Terminal?
       if (next == path.length()) {
-        if (captor != null) {
-          captor.match(capture);
-        }
+        captor.match(capture);
         return value;
       }
 
       // Query?
       if (path.charAt(next) == QUERY) {
-        if (captor != null) {
-          captor.match(capture);
-          captor.query(next + 1, path.length());
-        }
+        captor.match(capture);
+        captor.query(next + 1, path.length());
         return value;
       }
 
@@ -153,7 +145,7 @@ final class RadixTrie<T> {
       return null;
     }
 
-    private T capture(final CharSequence path, final int index, @Nullable final Captor captor,
+    private T capture(final CharSequence path, final int index, final Captor captor,
                       final int capture) {
       int i;
       char c;
@@ -167,9 +159,7 @@ final class RadixTrie<T> {
           break;
         }
         if (c == QUERY) {
-          if (captor != null) {
-            captor.query(i + 1, path.length());
-          }
+          captor.query(i + 1, path.length());
           break;
         }
       }
@@ -177,10 +167,8 @@ final class RadixTrie<T> {
 
       // Terminal?
       if (value != null && terminal) {
-        if (captor != null) {
-          captor.match(capture + 1);
-          captor.capture(capture, index, limit);
-        }
+        captor.match(capture + 1);
+        captor.capture(capture, index, limit);
         return value;
       }
 
@@ -189,9 +177,7 @@ final class RadixTrie<T> {
         for (i = limit; i >= index; i--) {
           final T value = lookup(edge, path, i, captor, capture + 1);
           if (value != null) {
-            if (captor != null) {
-              captor.capture(capture, index, i);
-            }
+            captor.capture(capture, index, i);
             return value;
           }
         }
