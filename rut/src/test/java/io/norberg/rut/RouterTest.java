@@ -8,8 +8,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
 import static io.norberg.rut.Router.Status.SUCCESS;
+import static java.lang.Character.toChars;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -131,6 +133,111 @@ public class RouterTest {
     assertThat(router.route(String.valueOf(new char[]{'G', 'E', 'T'}),
                             String.valueOf(new char[]{'/', 'f', 'o', 'o'}), result),
                is(SUCCESS));
+  }
+
+  @Test
+  public void testParamValueDecoding() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "r%c3%A4k%20sm%C3%B6rg%C3%A5s", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("r%c3%A4k%20sm%C3%B6rg%C3%A5s"));
+    assertThat(result.paramValueDecoded(0).toString(), is("räk smörgås"));
+  }
+
+  @Test
+  public void testParamValueDecodingInvalidInitialFirstNibble() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "%g3", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%g3"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+
+    assertThat(router.route("GET", "%+3", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%+3"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+
+    assertThat(router.route("GET", "%@3", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%@3"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+
+    assertThat(router.route("GET", "%[3", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%[3"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+  }
+
+  @Test
+  public void testParamValueDecodingInvalidInitialSecondNibble() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "%fo", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%fo"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+  }
+
+  @Test
+  public void testParamValueDecodingInvalidTooShort() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "%C", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%C"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+  }
+
+  @Test
+  public void testParamValueDecodingInvalidSecondChar() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "%C3%fo", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("%C3%fo"));
+    assertThat(result.paramValueDecoded(0), is(nullValue()));
+  }
+
+  @Test
+  public void testParamValueDecodingUnencoded() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "foobar", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("foobar"));
+    assertThat(result.paramValueDecoded(0).toString(), is("foobar"));
+  }
+
+  @Test
+  public void testParamValueDecodingSupplementary() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    final String decoded = new String(toChars(0x2FA1B));
+    final String encoded = "%F0%AF%A8%9B";
+    assertThat(router.route("GET", encoded, result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is(encoded));
+    assertThat(result.paramValueDecoded(0).toString(), is(decoded));
+  }
+
+  @Test
+  public void testParamValueDecodingSupplementaryComplex() {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "<param>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    final String decoded = new String(toChars(0x2FA1B)) + new String(toChars(0x2F8D3));
+    final String encoded = "%F0%AF%A8%9B%F0%AF%A3%93";
+    final String path = "foo-" + encoded + "-bar-" + encoded;
+    assertThat(router.route("GET", path, result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is(path));
+    assertThat(result.paramValueDecoded(0).toString(), is("foo-" + decoded + "-bar-" + decoded));
   }
 
 }

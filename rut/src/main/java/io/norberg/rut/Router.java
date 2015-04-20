@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static io.norberg.rut.Encoding.decode;
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
 import static io.norberg.rut.Router.Status.NOT_FOUND;
 import static io.norberg.rut.Router.Status.SUCCESS;
@@ -236,6 +237,15 @@ public final class Router<T> {
      */
     public CharSequence paramValue(final int i) {
       return captor.value(path, i);
+    }
+
+    /**
+     * Get the URL decoded value of the captured path parameter at index {code i}.
+     *
+     * @return The decoded value or null if the encoding is invalid.
+     */
+    public CharSequence paramValueDecoded(final int i) {
+      return decode(paramValue(i));
     }
 
     /**
