@@ -131,7 +131,7 @@ final class RadixTrie<T> {
       }
 
       // Query?
-      if (path.charAt(next) == QUERY) {
+      if (value != null && path.charAt(next) == QUERY) {
         captor.match(capture);
         captor.query(next + 1, path.length());
         return value;
