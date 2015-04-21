@@ -10,7 +10,7 @@
   <artifactId>rut-benchmark</artifactId>
 
   <properties>
-    <jmh.version>1.6.1</jmh.version>
+    <jmh.version>1.9</jmh.version>
   </properties>
 
   <dependencies>
