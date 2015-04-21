@@ -19,6 +19,7 @@ public class Example {
         .route("GET", "/users/<user>/blogs/<blog>/posts/", handler("list user blog posts"))
         .route("POST", "/users/<user>/blogs/<blog>/posts/", handler("create user blog post"))
         .route("GET", "/users/<user>/blogs/<blog>/posts/<post>", handler("get user blog post"))
+        .route("GET", "/static/<filename:path>", handler("get static content"))
         .build();
 
     // Create a reusable routing result holder
