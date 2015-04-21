@@ -7,7 +7,6 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
-import static io.norberg.rut.Router.Status.NOT_FOUND;
 import static io.norberg.rut.Router.Status.SUCCESS;
 import static java.lang.Character.toChars;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -248,6 +247,7 @@ public class RouterTest {
         .route("GET", "/without-trailing-slash/<param>", "")
         .route("GET", "/with-trailing-slash/", "")
         .route("GET", "/with-trailing-slash/<param>/", "")
+        .route("GET", "/without-trailing-slash-path/<param:path>", "")
         .optionalTrailingSlash(true)
         .build();
 
@@ -313,6 +313,20 @@ public class RouterTest {
     assertThat(router.route("GET", "/with-trailing-slash/foo/?query", result), is(SUCCESS));
     assertThat(result.params(), is(1));
     assertThat(result.paramValue(0).toString(), is("foo"));
+    assertThat(result.query().toString(), is("query"));
+
+    assertThat(router.route("GET", "/without-trailing-slash-path/foo", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("foo"));
+    assertThat(result.query(), is(nullValue()));
+    assertThat(router.route("GET", "/without-trailing-slash-path/foo?query", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("foo"));
+    assertThat(result.query().toString(), is("query"));
+
+    assertThat(router.route("GET", "/without-trailing-slash-path/foo/bar", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("foo/bar"));
+    assertThat(result.query(), is(nullValue()));
+    assertThat(router.route("GET", "/without-trailing-slash-path/foo/bar?query", result), is(SUCCESS));
+    assertThat(result.paramValue(0).toString(), is("foo/bar"));
     assertThat(result.query().toString(), is("query"));
   }
 }
