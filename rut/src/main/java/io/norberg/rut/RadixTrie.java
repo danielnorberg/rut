@@ -10,7 +10,9 @@ final class RadixTrie<T> {
 
   private static final Charset ASCII = Charset.forName("US-ASCII");
 
-  private static final byte CAPTURE = 127;
+  private static final byte CAPTURE_SEG = -128;
+  private static final byte CAPTURE_PATH = -127;
+
   private static final byte SLASH = '/';
   private static final byte QUERY = '?';
 
@@ -68,18 +70,34 @@ final class RadixTrie<T> {
       this.edge = edge;
       this.value = value;
 
-      // Check that siblings are ordered
-      if (sibling != null && head >= sibling.head) {
+      // Verify that match siblings are ordered
+      if (sibling != null && head > 0 && sibling.head > 0 && head > sibling.head) {
         throw new IllegalArgumentException("unordered sibling");
       }
 
+      // Verify that sibling heads are unique
+      if (sibling != null && head == sibling.head) {
+        throw new IllegalArgumentException("duplicate sibling head");
+      }
+
+      // Verify that the seg capture is last or followed by path capture
+      if (head == CAPTURE_SEG && sibling != null && sibling.head != CAPTURE_PATH) {
+        throw new IllegalArgumentException("seg capture must be last or followed by path capture");
+      }
+
+      // Verify that the path capture is last
+      if (head == CAPTURE_PATH && sibling != null) {
+        throw new IllegalArgumentException("path capture must be last sibling");
+      }
+
+      // Verify that terminal nodes have values
       if (value == null && edge == null) {
         throw new IllegalArgumentException("terminal node without value");
       }
     }
 
     private int captures() {
-      final int captures = (head == CAPTURE) ? 1 : 0;
+      final int captures = (head < 0) ? 1 : 0;
       final int edgeCaptures = (edge == null) ? 0 : edge.captures();
       final int siblingCaptures = (sibling == null) ? 0 : sibling.captures();
       return captures + max(edgeCaptures, siblingCaptures);
@@ -98,10 +116,15 @@ final class RadixTrie<T> {
       final char c = path.charAt(i);
 
       Node<T> node = root;
+      byte head;
 
       // Seek single potential matching node. This will be at any place in the ordered list.
       do {
-        if (node.head == c) {
+        head = node.head;
+        if (head < 0) {
+          break;
+        }
+        if (head == c) {
           final T value = node.match(path, i, captor, capture);
           if (value != null) {
             return value;
@@ -114,10 +137,17 @@ final class RadixTrie<T> {
         node = node.sibling;
       } while (true);
 
-      // Seek potential capture node. If any, this will be the last node in the list.
+      // Seek potential capture nodes. These can be the second two last nodes in the list,
+      // with the seg capture node before the path capture node.
       do {
-        if (node.head == CAPTURE) {
-          return node.capture(path, i, captor, capture);
+        if (node.head == CAPTURE_SEG) {
+          final T value = node.captureSeg(path, i, captor, capture);
+          if (value != null) {
+            return value;
+          }
+        }
+        if (node.head == CAPTURE_PATH) {
+          return node.capturePath(path, i, captor, capture);
         }
         node = node.sibling;
       } while (node != null);
@@ -169,8 +199,29 @@ final class RadixTrie<T> {
       return null;
     }
 
-    private T capture(final CharSequence path, final int index, final Captor captor,
-                      final int capture) {
+    private T capturePath(final CharSequence path, final int index, final Captor captor,
+                          final int capture) {
+      // value != null
+
+      int i;
+      char c;
+
+      // Find capture bound
+      for (i = index; i < path.length(); i++) {
+        c = path.charAt(i);
+        if (c == QUERY) {
+          captor.query(i + 1, path.length());
+          break;
+        }
+      }
+
+      captor.match(capture + 1);
+      captor.capture(capture, index, i);
+      return value;
+    }
+
+    private T captureSeg(final CharSequence path, final int index, final Captor captor,
+                         final int capture) {
       int i;
       char c;
 
@@ -211,7 +262,7 @@ final class RadixTrie<T> {
     }
 
     private String prefix() {
-      if (head == CAPTURE) {
+      if (head == CAPTURE_SEG) {
         return "<*>";
       } else {
         if (tail == null) {
@@ -234,8 +285,12 @@ final class RadixTrie<T> {
              '}';
     }
 
-    static <T> Node<T> capture(final Node<T> sibling, final Node<T> edge, final T value) {
-      return new Node<T>(CAPTURE, null, sibling, edge, value);
+    static <T> Node<T> captureSeg(final Node<T> sibling, final Node<T> edge, final T value) {
+      return new Node<T>(CAPTURE_SEG, null, sibling, edge, value);
+    }
+
+    static <T> Node<T> capturePath(final Node<T> sibling, final T value) {
+      return new Node<T>(CAPTURE_PATH, null, sibling, null, value);
     }
 
     static <T> Node<T> match(final CharSequence prefix, final Node<T> sibling,

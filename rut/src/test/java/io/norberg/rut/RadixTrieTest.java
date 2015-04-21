@@ -218,6 +218,36 @@ public class RadixTrieTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
+  public void verifyPathBeforeSegCaptureSiblingsThrow() {
+    final Node<String> sibling = Node.captureSeg(null, null, "foo");
+    Node.capturePath(sibling, "bar");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifySegCaptureBeforeMatchSiblingThrows() {
+    final Node<String> sibling = Node.match("foo", null, null, "foo");
+    Node.captureSeg(sibling, null, "bar");
+  }
+
+  @Test
+  public void testSegCaptureBeforePathCapture() {
+    final Node<String> sibling = Node.capturePath(null, "foo");
+    Node.captureSeg(sibling, null, "bar");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyPathCaptureSiblingNotLastThrows() {
+    final Node<String> sibling = Node.match("foo", null, null, "foo");
+    Node.capturePath(sibling, "bar");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyDuplicateSiblingHeadsThrow() {
+    final Node<String> sibling = Node.match("aa", null, null, "foo");
+    Node.match("ab", sibling, null, "bar");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void verifyTerminalNodeWithoutValueThrows() {
     Node.match("a", null, null, null);
   }
@@ -225,6 +255,168 @@ public class RadixTrieTest {
   @Test(expected = IllegalArgumentException.class)
   public void verifyNonAsciiInsertThrows() {
     RadixTrie.builder(String.class).insert("" + (char) 128, "foo");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyNonTerminalPathCaptureThrows() {
+    RadixTrie.builder(String.class).insert("<foo:path>bar", "foo");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void verifyUnknownCaptureTypeThrows() {
+    RadixTrie.builder(String.class).insert("<foo:bar>", "foo");
+  }
+
+  @Test
+  public void testPathCaptureReplace() {
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("<foo:path>", "foo")
+        .insert("<bar:path>", "bar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+
+    {
+      final String path = "/some/path/with/slashes";
+      final String value = rdx.lookup(path, captor);
+      assertThat(value, is("bar"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(path, 0).toString(), is(path));
+    }
+  }
+
+  @Test
+  public void testPathCaptureSingleTrivialRoute() {
+    final RadixTrie.Builder<String> builder = RadixTrie.builder(String.class)
+        .insert("<foo:path>", "foo");
+    builder.toString();
+    final RadixTrie<String> rdx = builder.build();
+    final RadixTrie.Captor captor = rdx.captor();
+
+    {
+      final String path = "/some/path/with/slashes";
+      final String value = rdx.lookup(path, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(path, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "string-without-slash";
+      final String value = rdx.lookup(path, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(path, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "/some/path/with/slash";
+      final String uri = path + "?and=query";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "string-without-slash";
+      final String uri = path + "?and=query";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(path, 0).toString(), is(path));
+    }
+  }
+
+  @Test
+  public void testPathCaptureTwoRoutes() {
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("<foo:path>", "foo")
+        .insert("bar<bar:path>", "bar")
+        .build();
+    final RadixTrie.Captor captor = rdx.captor();
+
+    {
+      final String uri = "/foo/path/with/slashes";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(uri));
+    }
+
+    {
+      final String uri = "foo-string-without-slash";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(uri));
+    }
+
+    {
+      final String path = "/foo/path/with/slash";
+      final String uri = path + "?and=query";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "foo-string-without-slash";
+      final String uri = path + "?and=query";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("foo"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "/path/with/slashes";
+      final String uri = "bar" + path;
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("bar"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "string-without-slash";
+      final String uri = "bar" + path;
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("bar"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "/path/with/slash";
+      final String uri = "bar" + path + "?and=query";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("bar"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
+
+    {
+      final String path = "string-without-slash";
+      final String uri = "bar" + path + "?and=query";
+      final String value = rdx.lookup(uri, captor);
+      assertThat(value, is("bar"));
+      assertThat(captor.isMatch(), is(true));
+      assertThat(captor.values(), is(1));
+      assertThat(captor.value(uri, 0).toString(), is(path));
+    }
   }
 
   @Test
