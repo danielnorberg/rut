@@ -88,21 +88,37 @@ final class RadixTrie<T> {
         return null;
       }
 
+      if (root == null) {
+        return null;
+      }
+
       final char c = path.charAt(i);
 
       Node<T> node = root;
-      while (node != null) {
-        T value = null;
+
+      // Seek single potential matching node. This will be at any place in the ordered list.
+      do {
         if (node.head == c) {
-          value = node.match(path, i, captor, capture);
-        } else if (node.head == CAPTURE) {
-          value = node.capture(path, i, captor, capture);
+          final T value = node.match(path, i, captor, capture);
+          if (value != null) {
+            return value;
+          }
+          break;
         }
-        if (value != null) {
-          return value;
+        if (node.sibling == null) {
+          break;
         }
         node = node.sibling;
-      }
+      } while (true);
+
+      // Seek potential capture node. If any, this will be the last node in the list.
+      do {
+        if (node.head == CAPTURE) {
+          return node.capture(path, i, captor, capture);
+        }
+        node = node.sibling;
+      } while (node != null);
+
       return null;
     }
 
