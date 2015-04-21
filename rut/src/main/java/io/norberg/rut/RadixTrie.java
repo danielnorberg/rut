@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.norberg.rut.RadixTrie.Node.fanout;
 import static java.lang.Math.max;
 
 final class RadixTrie<T> {
@@ -30,7 +31,7 @@ final class RadixTrie<T> {
 
   T lookup(final CharSequence path, final Captor captor) {
     captor.reset();
-    return Node.lookup(root, path, 0, captor, 0);
+    return fanout(root, path, 0, captor, 0);
   }
 
   int captures() {
@@ -103,17 +104,21 @@ final class RadixTrie<T> {
       return captures + max(edgeCaptures, siblingCaptures);
     }
 
-    private static <T> T lookup(final Node<T> root, final CharSequence path, final int i,
-                                final Captor captor, final int capture) {
-      if (i == path.length()) {
-        return null;
-      }
-
+    static <T> T fanout(final Node<T> root, final CharSequence path, final int i,
+                        final Captor captor, final int capture) {
       if (root == null) {
         return null;
       }
 
+      if (i == path.length()) {
+        return terminalFanout(root, captor, capture);
+      }
+
       final char c = path.charAt(i);
+
+      if (c == QUERY) {
+        return terminalFanout(root, captor, capture);
+      }
 
       Node<T> node = root;
       byte head;
@@ -155,19 +160,57 @@ final class RadixTrie<T> {
       return null;
     }
 
+    private static <T> T terminalFanout(Node<T> node, final Captor captor, final int capture) {
+      byte head;
+      if (!captor.optionalTrailingSlash) {
+        return null;
+      }
+
+      // Missing trailing slash in path?
+      do {
+        head = node.head;
+        if (head < 0) {
+          break;
+        }
+        if (head == SLASH && node.tail == null) {
+          if (node.value != null) {
+            captor.match(capture);
+          }
+          return node.value;
+        }
+        node = node.sibling;
+      } while (node != null);
+
+      return null;
+    }
+
     private T match(final CharSequence path, final int index, final Captor captor,
                     final int capture) {
       // Match prefix
+      final int length = path.length();
       final int next;
       if (tail == null) {
         next = index + 1;
       } else {
         next = index + 1 + tail.length;
-        if (next > path.length()) {
+        if (next > length) {
+          // Trailing slash in prefix?
+          if (value != null && captor.optionalTrailingSlash && tail[tail.length - 1] == SLASH &&
+              next == length + 1) {
+            captor.match(capture);
+            return value;
+          }
           return null;
         }
         for (int i = 0; i < tail.length; i++) {
-          if (tail[i] != path.charAt(index + 1 + i)) {
+          final char c = path.charAt(index + 1 + i);
+          if (tail[i] != c) {
+            // Trailing slash in path?
+            if (value != null && captor.optionalTrailingSlash && tail[i] == SLASH && c == QUERY) {
+              captor.query(index + 2 + i, length);
+              captor.match(capture);
+              return value;
+            }
             return null;
           }
         }
@@ -182,16 +225,29 @@ final class RadixTrie<T> {
       }
 
       // Query?
-      if (path.charAt(next) == QUERY) {
+      final char c = path.charAt(next);
+      if (c == QUERY) {
         if (value != null) {
-          captor.query(next + 1, path.length());
+          captor.query(next + 1, length);
           captor.match(capture);
         }
         return value;
       }
 
+      // Trailing slash in path?
+      if (value != null && captor.optionalTrailingSlash && c == SLASH) {
+        if (next + 1 == length) {
+          captor.match(capture);
+          return this.value;
+        } else if (path.charAt(next + 1) == QUERY) {
+          captor.match(capture);
+          captor.query(next + 2, length);
+          return this.value;
+        }
+      }
+
       // Edge fanout
-      final T value = lookup(edge, path, next, captor, capture);
+      final T value = fanout(edge, path, next, captor, capture);
       if (value != null) {
         return value;
       }
@@ -226,31 +282,48 @@ final class RadixTrie<T> {
       char c;
 
       // Find capture bound
+      final int length = path.length();
       boolean terminal = true;
-      for (i = index; i < path.length(); i++) {
+      for (i = index; i < length; i++) {
         c = path.charAt(i);
         if (c == SLASH) {
           terminal = false;
           break;
         }
         if (c == QUERY) {
-          captor.query(i + 1, path.length());
+          captor.query(i + 1, length);
           break;
         }
       }
       final int limit = i;
 
       // Terminal?
-      if (value != null && terminal) {
-        captor.match(capture + 1);
-        captor.capture(capture, index, limit);
-        return value;
+      if (value != null) {
+        if (terminal) {
+          captor.match(capture + 1);
+          captor.capture(capture, index, limit);
+          return value;
+        }
+
+        // Trailing slash in path?
+        if (captor.optionalTrailingSlash) {
+          if (limit + 1 == length) {
+            captor.match(capture + 1);
+            captor.capture(capture, index, limit);
+            return value;
+          } else if (path.charAt(limit + 1) == QUERY) {
+            captor.match(capture + 1);
+            captor.capture(capture, index, i);
+            captor.query(limit + 2, length);
+            return value;
+          }
+        }
       }
 
       // Fanout
       if (edge != null) {
         for (i = limit; i >= index; i--) {
-          final T value = lookup(edge, path, i, captor, capture + 1);
+          final T value = fanout(edge, path, i, captor, capture + 1);
           if (value != null) {
             captor.capture(capture, index, i);
             return value;
@@ -350,14 +423,21 @@ final class RadixTrie<T> {
 
     private final int[] start;
     private final int[] end;
+
     private boolean match;
     private int captured;
     private int queryStart;
     private int queryEnd;
 
+    private boolean optionalTrailingSlash;
+
     Captor(final int captures) {
       this.start = new int[captures];
       this.end = new int[captures];
+    }
+
+    void optionalTrailingSlash(final boolean optionalTrailingSlash) {
+      this.optionalTrailingSlash = optionalTrailingSlash;
     }
 
     private void reset() {

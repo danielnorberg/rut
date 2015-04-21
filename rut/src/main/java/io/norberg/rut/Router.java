@@ -18,9 +18,11 @@ import static io.norberg.rut.Router.Status.SUCCESS;
 public final class Router<T> {
 
   private final RadixTrie<Route<T>> trie;
+  private final boolean optionalTrailingSlash;
 
-  private Router(final RadixTrie<Route<T>> trie) {
+  private Router(final RadixTrie<Route<T>> trie, final boolean optionalTrailingSlash) {
     this.trie = trie;
+    this.optionalTrailingSlash = optionalTrailingSlash;
   }
 
   public static <T> Builder<T> builder() {
@@ -45,6 +47,7 @@ public final class Router<T> {
    * if the endpoint was found but the method did not match.
    */
   public Status route(final CharSequence method, final CharSequence path, final Result<T> result) {
+    result.captor.optionalTrailingSlash(optionalTrailingSlash);
     final Route<T> route = trie.lookup(path, result.captor);
     if (route == null) {
       return result.notFound().status();
@@ -107,6 +110,8 @@ public final class Router<T> {
    */
   public static class Builder<T> {
 
+    private boolean optionalTrailingSlash;
+
     private Builder() {
     }
 
@@ -117,7 +122,7 @@ public final class Router<T> {
      * #route}.
      */
     public Router<T> build() {
-      return new Router<T>(trie.build());
+      return new Router<T>(trie.build(), optionalTrailingSlash);
     }
 
     /**
@@ -130,6 +135,11 @@ public final class Router<T> {
      */
     public Builder<T> route(final String method, final String path, final T target) {
       trie.insert(path, new RouteVisitor(method, target));
+      return this;
+    }
+
+    public Builder<T> optionalTrailingSlash(final boolean optionalTrailingSlash) {
+      this.optionalTrailingSlash = optionalTrailingSlash;
       return this;
     }
 
