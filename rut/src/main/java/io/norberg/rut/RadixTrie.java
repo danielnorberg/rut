@@ -1,11 +1,14 @@
 package io.norberg.rut;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.max;
 
 final class RadixTrie<T> {
+
+  private static final Charset ASCII = Charset.forName("US-ASCII");
 
   private static final byte CAPTURE = 127;
   private static final byte SLASH = '/';
@@ -57,8 +60,8 @@ final class RadixTrie<T> {
     private final Node<T> edge;
     private final T value;
 
-    Node(final byte head, final byte[] tail, final Node<T> sibling, final Node<T> edge,
-         final T value) {
+    private Node(final byte head, final byte[] tail, final Node<T> sibling, final Node<T> edge,
+                 final T value) {
       this.head = head;
       this.tail = tail;
       this.sibling = sibling;
@@ -229,6 +232,19 @@ final class RadixTrie<T> {
              "e=" + prefixes(edge) +
              ", v=" + (value == null ? "" : value.toString()) +
              '}';
+    }
+
+    static <T> Node<T> capture(final Node<T> sibling, final Node<T> edge, final T value) {
+      return new Node<T>(CAPTURE, null, sibling, edge, value);
+    }
+
+    static <T> Node<T> match(final CharSequence prefix, final Node<T> sibling,
+                             final Node<T> edge, final T value) {
+      final byte head = (byte) prefix.charAt(0);
+      final byte[] tail = prefix.length() == 1
+                          ? null
+                          : prefix.subSequence(1, prefix.length()).toString().getBytes(ASCII);
+      return new Node<T>(head, tail, sibling, edge, value);
     }
   }
 

@@ -213,13 +213,13 @@ public class RadixTrieTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void verifyUnorderedSiblingsThrow() {
-    final Node<String> sibling = new Node<String>((byte) 1, null, null, null, "foo");
-    new Node<String>((byte) 2, null, sibling, null, "bar");
+    final Node<String> sibling = Node.match("a", null, null, "foo");
+    Node.match("b", sibling, null, "bar");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void verifyTerminalNodeWithoutValueThrows() {
-    new Node<String>((byte) 1, null, null, null, null);
+    Node.match("a", null, null, null);
   }
 
   @Test(expected = IllegalArgumentException.class)

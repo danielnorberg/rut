@@ -1,6 +1,5 @@
 package io.norberg.rut;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,8 +9,6 @@ import java.util.TreeMap;
 import static java.util.Collections.reverse;
 
 final class Trie<T> {
-
-  private static final Charset ASCII = Charset.forName("US-ASCII");
 
   private static final char CAPTURE = 127; // DEL
 
@@ -94,17 +91,14 @@ final class Trie<T> {
 
     private RadixTrie.Node<T> compress(final RadixTrie.Node<T> sibling) {
       if (c == CAPTURE) {
-        return new RadixTrie.Node<T>((byte) c, null, sibling, compressEdges(edges), value);
+        return RadixTrie.Node.capture(sibling, compressEdges(edges), value);
       }
 
       final StringBuilder prefix = new StringBuilder();
       final Node<T> end = compress(prefix);
       final RadixTrie.Node<T> edge = compressEdges(end.edges);
 
-      final byte head = (byte) prefix.charAt(0);
-      final byte[] tail = prefix.length() == 1 ? null : prefix.substring(1).getBytes(ASCII);
-
-      return new RadixTrie.Node<T>(head, tail, sibling, edge, end.value);
+      return RadixTrie.Node.match(prefix, sibling, edge, end.value);
     }
 
     private Node<T> compress(final StringBuilder prefix) {
