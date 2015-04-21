@@ -203,10 +203,10 @@ final class RadixTrie<T> {
           return null;
         }
         for (int i = 0; i < tail.length; i++) {
-          final char c = path.charAt(index + 1 + i);
-          if (tail[i] != c) {
+          if (tail[i] != path.charAt(index + 1 + i)) {
             // Trailing slash in path?
-            if (value != null && captor.optionalTrailingSlash && tail[i] == SLASH && c == QUERY) {
+            if (value != null && captor.optionalTrailingSlash && tail[i] == SLASH &&
+                path.charAt(index + 1 + i) == QUERY) {
               captor.query(index + 2 + i, length);
               captor.match(capture);
               return value;
