@@ -43,7 +43,7 @@ final Router<Handler> router = Router.builder(Handler.class)
 final Router.Result<Handler> result = router.result();
 
 // Route a request
-router.route("POST", "/users/foo-user/blogs/bar-blog/posts/?q=baz&w=quux", result);
+router.route("POST", "/users/foo-user/blogs/b%C3%A4r-blog/posts/?q=baz&w=quux", result);
 
 assert result.isSuccess();
 final Handler handler = result.target();
@@ -51,9 +51,10 @@ final Handler handler = result.target();
 // Print handler name
 out.println("handler: " + handler);
 
-// Print captured path parameter names and values
+// Print captured path parameter names, raw values and uri decoded values
 for (int i = 0; i < result.params(); i++) {
-  out.printf("param %d: %s=%s%n", i, result.paramName(i), result.paramValue(i));
+  out.printf("param %d: %s=%s (%s)%n", i, result.paramName(i), result.paramValue(i),
+             result.paramValueDecoded(i));
 }
 
 // Print query
@@ -66,8 +67,8 @@ out.println("allowed methods: " + result.allowedMethods());
 Output: 
 ```
 handler: create user blog post
-param 0: user=foo-user
-param 1: blog=bar-blog
+param 0: user=foo-user (foo-user)
+param 1: blog=b%C3%A4r-blog (bär-blog)
 query: q=baz&w=quux
 allowed methods: [POST, GET]
 ```
