@@ -271,10 +271,11 @@ final class RadixTrie<T> {
       char c;
 
       // Find capture bound
-      for (i = index; i < path.length(); i++) {
+      final int length = path.length();
+      for (i = index; i < length; i++) {
         c = path.charAt(i);
         if (c == QUERY) {
-          captor.query(i + 1, path.length());
+          captor.query(i + 1, length);
           break;
         }
       }
