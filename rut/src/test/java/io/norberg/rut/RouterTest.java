@@ -307,13 +307,16 @@ public class RouterTest {
         .route("GET", "/7-with-trailing-slash-nested/entity/<param>", "7")
         .route("GET", "/8-without-trailing-slash-nested/entity", "8")
         .route("GET", "/9-without-trailing-slash-nested/entity/<param>", "9")
-        .route("GET", "/1x-ambigous", "10")
-        .route("GET", "/1x-ambigous/", "11")
+        .route("GET", "/1x-ambiguous", "10")
+        .route("GET", "/1x-ambiguous/", "11")
         .route("GET", "/2x-fork", "20")
         .route("GET", "/2x-fork/", "21")
         .route("GET", "/2x-fork/a", "22")
         .route("GET", "/2x-fork/b", "23")
         .route("GET", "/2x-fork/<param>", "24")
+        .route("GET", "/", "25")
+        .route("GET", "//", "26")
+        .route("GET", "//<param:path>", "27")
         .optionalTrailingSlash(true)
         .build();
 
@@ -357,10 +360,10 @@ public class RouterTest {
     assertFail(r, "GET", "/9-without-trailing-slash-nested/entity");
     assertFail(r, "GET", "/9-without-trailing-slash-nested/entity/");
 
-    assertSucc(r, "GET", "/1x-ambigous", "10", p());
-    assertFail(r, "GET", "/1x-ambigous-no-match");
-    assertSucc(r, "GET", "/1x-ambigous/", "11", p());
-    assertFail(r, "GET", "/1x-ambigous/no-match");
+    assertSucc(r, "GET", "/1x-ambiguous", "10", p());
+    assertFail(r, "GET", "/1x-ambiguous-no-match");
+    assertSucc(r, "GET", "/1x-ambiguous/", "11", p());
+    assertFail(r, "GET", "/1x-ambiguous/no-match");
 
     assertSucc(r, "GET", "/2x-fork", "20", p());
     assertSucc(r, "GET", "/2x-fork/", "21", p());
@@ -369,6 +372,12 @@ public class RouterTest {
     assertSucc(r, "GET", "/2x-fork/foo", "24", p("foo"));
     assertSucc(r, "GET", "/2x-fork/afoo", "24", p("afoo"));
     assertSucc(r, "GET", "/2x-fork/bfoo", "24", p("bfoo"));
+
+    assertSucc(r, "GET", "/", "25", p());
+    assertSucc(r, "GET", "//", "26", p());
+    assertSucc(r, "GET", "///", "27", p("/"));
+    assertSucc(r, "GET", "//foo", "27", p("foo"));
+    assertSucc(r, "GET", "//foo/bar", "27", p("foo/bar"));
   }
 
   private List<String> p(final String... params) {
