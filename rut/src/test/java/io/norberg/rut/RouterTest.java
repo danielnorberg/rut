@@ -6,9 +6,13 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.List;
+
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
+import static io.norberg.rut.Router.Status.NOT_FOUND;
 import static io.norberg.rut.Router.Status.SUCCESS;
 import static java.lang.Character.toChars;
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
@@ -240,93 +244,108 @@ public class RouterTest {
     assertThat(result.paramValueDecoded(0).toString(), is("foo-" + decoded + "-bar-" + decoded));
   }
 
+  private void assertSucc(final Router<String> r, final String m,
+                          final String u, final String t, final List<String> p) {
+    assertSucc(r, m, u, t, p, null);
+    assertSucc(r, m, u + "?q", t, p, "q");
+    assertSucc(r, m, u + "?query", t, p, "query");
+    assertSucc(r, m, u + "?queryqueryqueryquery", t, p, "queryqueryqueryquery");
+  }
+
+  private <T> void assertSucc(final Router<T> router, final String method,
+                              final String uri, final T target, final List<String> params,
+                              final String query) {
+    final Router.Result<T> result = router.result();
+    assertThat(router.route(method, uri, result), is(SUCCESS));
+    assertThat(result.target(), is(target));
+    assertThat(result.params(), is(params.size()));
+    assertThat(result.isSuccess(), is(true));
+    for (int i = 0; i < params.size(); i++) {
+      assertThat(result.paramValue(i).toString(), is(params.get(i)));
+    }
+    assertThat(toString(result.query()), is(query));
+  }
+
+  private void assertFail(final Router<String> r, final String m, final String u) {
+    assertNotFound(r, m, u);
+    assertNotFound(r, m, u + "?q");
+    assertNotFound(r, m, u + "?query");
+    assertNotFound(r, m, u + "?queryqueryqueryquery");
+  }
+
+  private <T> void assertNotFound(final Router<T> r, final String m, final String u) {
+    final Router.Result<T> result = r.result();
+    assertThat(r.route(m, u, result), is(NOT_FOUND));
+    assertThat(result.params(), is(0));
+    assertThat(result.isSuccess(), is(false));
+  }
+
+  private String toString(final CharSequence s) {
+    return s == null ? null : s.toString();
+  }
+
   @Test
   public void testOptionalTrailingSlash() {
-    final Router<String> router = Router.builder(String.class)
-        .route("GET", "/without-trailing-slash", "")
-        .route("GET", "/without-trailing-slash/<param>", "")
-        .route("GET", "/with-trailing-slash/", "")
-        .route("GET", "/with-trailing-slash/<param>/", "")
-        .route("GET", "/without-trailing-slash-path/<param:path>", "")
+    final Router<String> r = Router.builder(String.class)
+        .route("GET", "/1-without-trailing-slash", "1")
+        .route("GET", "/2-without-trailing-slash/<param>", "2")
+        .route("GET", "/3-with-trailing-slash/", "3")
+        .route("GET", "/4-with-trailing-slash/<param>/", "4")
+        .route("GET", "/5-without-trailing-slash-path/<param:path>", "5")
+        .route("GET", "/6-with-trailing-slash-nested/entity/", "6")
+        .route("GET", "/7-with-trailing-slash-nested/entity/<param>", "7")
+        .route("GET", "/8-without-trailing-slash-nested/entity", "8")
+        .route("GET", "/9-without-trailing-slash-nested/entity/<param>", "9")
+        .route("GET", "/1x-ambigous", "10")
+        .route("GET", "/1x-ambigous/", "11")
         .optionalTrailingSlash(true)
         .build();
 
-    final Router.Result<String> result = router.result();
+    assertSucc(r, "GET", "/1-without-trailing-slash", "1", p());
+    assertSucc(r, "GET", "/1-without-trailing-slash/", "1", p());
 
-    assertThat(router.route("GET", "/without-trailing-slash", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/without-trailing-slash?query", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/2-without-trailing-slash/foo", "2", p("foo"));
+    assertSucc(r, "GET", "/2-without-trailing-slash/foo/", "2", p("foo"));
 
-    assertThat(router.route("GET", "/without-trailing-slash/", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/without-trailing-slash/?query", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/3-with-trailing-slash", "3", p());
+    assertSucc(r, "GET", "/3-with-trailing-slash/", "3", p());
+    assertFail(r, "GET", "/3-with-trailing-slash-no-match");
 
-    assertThat(router.route("GET", "/without-trailing-slash/foo", result), is(SUCCESS));
-    assertThat(result.params(), is(1));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/without-trailing-slash/foo?query", result), is(SUCCESS));
-    assertThat(result.params(), is(1));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/4-with-trailing-slash/foo", "4", p("foo"));
+    assertSucc(r, "GET", "/4-with-trailing-slash/foo/", "4", p("foo"));
+    assertFail(r, "GET", "/4-with-trailing-slash-no-match/foo");
 
-    assertThat(router.route("GET", "/without-trailing-slash/foo/", result), is(SUCCESS));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/without-trailing-slash/foo/?query", result), is(SUCCESS));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/5-without-trailing-slash-path/foo", "5", p("foo"));
+    assertSucc(r, "GET", "/5-without-trailing-slash-path/foo/bar", "5", p("foo/bar"));
 
-    assertThat(router.route("GET", "/with-trailing-slash", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/with-trailing-slash?query", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/6-with-trailing-slash-nested/entity", "6", p());
+    assertSucc(r, "GET", "/6-with-trailing-slash-nested/entity/", "6", p());
+    assertFail(r, "GET", "/6-with-trailing-slash-nested/no-match");
+    assertFail(r, "GET", "/6-with-trailing-slash-nested-no-match");
+    assertFail(r, "GET", "/6-with-trailing-slash-nested/entity-no-match");
+    assertFail(r, "GET", "/6-with-trailing-slash-nested/entity/no-match");
 
-    assertThat(router.route("GET", "/with-trailing-slash/", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/with-trailing-slash/?query", result), is(SUCCESS));
-    assertThat(result.params(), is(0));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/7-with-trailing-slash-nested/entity/foo", "7", p("foo"));
+    assertFail(r, "GET", "/7-with-trailing-slash-nested");
+    assertFail(r, "GET", "/7-with-trailing-slash-nested/entity-no-match");
 
-    assertThat(router.route("GET", "/with-trailing-slash/foo", result), is(SUCCESS));
-    assertThat(result.params(), is(1));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/with-trailing-slash/foo?query", result), is(SUCCESS));
-    assertThat(result.params(), is(1));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/8-without-trailing-slash-nested/entity", "8", p());
+    assertFail(r, "GET", "/8-without-trailing-slash-nested/entity-no-match");
+    assertFail(r, "GET", "/8-without-trailing-slash-nested/entity/no-match");
+    assertFail(r, "GET", "/8-without-trailing-slash-nested/");
+    assertFail(r, "GET", "/8-without-trailing-slash-nested");
 
-    assertThat(router.route("GET", "/with-trailing-slash/foo/", result), is(SUCCESS));
-    assertThat(result.params(), is(1));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/with-trailing-slash/foo/?query", result), is(SUCCESS));
-    assertThat(result.params(), is(1));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/9-without-trailing-slash-nested/entity/foo", "9", p("foo"));
+    assertFail(r, "GET", "/9-without-trailing-slash-nested/entity-no-match");
+    assertFail(r, "GET", "/9-without-trailing-slash-nested/entity/foo/no-match");
+    assertFail(r, "GET", "/9-without-trailing-slash-nested/entity");
+    assertFail(r, "GET", "/9-without-trailing-slash-nested/entity/");
 
-    assertThat(router.route("GET", "/without-trailing-slash-path/foo", result), is(SUCCESS));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/without-trailing-slash-path/foo?query", result), is(SUCCESS));
-    assertThat(result.paramValue(0).toString(), is("foo"));
-    assertThat(result.query().toString(), is("query"));
+    assertSucc(r, "GET", "/1x-ambigous", "10", p());
+    assertSucc(r, "GET", "/1x-ambigous/", "11", p());
+  }
 
-    assertThat(router.route("GET", "/without-trailing-slash-path/foo/bar", result), is(SUCCESS));
-    assertThat(result.paramValue(0).toString(), is("foo/bar"));
-    assertThat(result.query(), is(nullValue()));
-    assertThat(router.route("GET", "/without-trailing-slash-path/foo/bar?query", result), is(SUCCESS));
-    assertThat(result.paramValue(0).toString(), is("foo/bar"));
-    assertThat(result.query().toString(), is("query"));
+  private List<String> p(final String... params) {
+    return asList(params);
   }
 }

@@ -138,6 +138,11 @@ public final class Router<T> {
       return this;
     }
 
+    /**
+     *
+     * @param optionalTrailingSlash
+     * @return
+     */
     public Builder<T> optionalTrailingSlash(final boolean optionalTrailingSlash) {
       this.optionalTrailingSlash = optionalTrailingSlash;
       return this;

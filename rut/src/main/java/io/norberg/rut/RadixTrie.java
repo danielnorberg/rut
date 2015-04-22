@@ -161,12 +161,12 @@ final class RadixTrie<T> {
     }
 
     private static <T> T terminalFanout(Node<T> node, final Captor captor, final int capture) {
-      byte head;
       if (!captor.optionalTrailingSlash) {
         return null;
       }
 
-      // Missing trailing slash in path?
+      // Trailing slash in prefix?
+      byte head;
       do {
         head = node.head;
         if (head < 0) {
@@ -205,7 +205,8 @@ final class RadixTrie<T> {
         for (int i = 0; i < tail.length; i++) {
           if (tail[i] != path.charAt(index + 1 + i)) {
             // Trailing slash in path?
-            if (value != null && captor.optionalTrailingSlash && tail[i] == SLASH &&
+            if (value != null && captor.optionalTrailingSlash && i == tail.length - 1
+                && tail[tail.length - 1] == SLASH &&
                 path.charAt(index + 1 + i) == QUERY) {
               captor.query(index + 2 + i, length);
               captor.match(capture);
@@ -217,25 +218,33 @@ final class RadixTrie<T> {
       }
 
       // Terminal?
-      if (next == path.length()) {
+      if (next == length) {
         if (value != null) {
           captor.match(capture);
+          return value;
         }
-        return value;
+        return terminalFanout(edge, captor, capture);
       }
 
       // Query?
       final char c = path.charAt(next);
       if (c == QUERY) {
+        captor.query(next + 1, length);
         if (value != null) {
-          captor.query(next + 1, length);
           captor.match(capture);
+          return value;
         }
+        return terminalFanout(edge, captor, capture);
+      }
+
+      // Edge fanout
+      final T value = fanout(edge, path, next, captor, capture);
+      if (value != null) {
         return value;
       }
 
       // Trailing slash in path?
-      if (value != null && captor.optionalTrailingSlash && c == SLASH) {
+      if (this.value != null && captor.optionalTrailingSlash && c == SLASH) {
         if (next + 1 == length) {
           captor.match(capture);
           return this.value;
@@ -244,12 +253,6 @@ final class RadixTrie<T> {
           captor.query(next + 2, length);
           return this.value;
         }
-      }
-
-      // Edge fanout
-      final T value = fanout(edge, path, next, captor, capture);
-      if (value != null) {
-        return value;
       }
 
       return null;
