@@ -229,12 +229,17 @@ final class RadixTrie<T> {
       // Query?
       final char c = path.charAt(next);
       if (c == QUERY) {
-        captor.query(next + 1, length);
         if (value != null) {
+          captor.query(next + 1, length);
           captor.match(capture);
           return value;
         }
-        return terminalFanout(edge, captor, capture);
+        final T value = terminalFanout(edge, captor, capture);
+        if (value != null) {
+          captor.query(next + 1, length);
+          return value;
+        }
+        return null;
       }
 
       // Edge fanout

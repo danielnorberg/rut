@@ -278,6 +278,17 @@ public class RouterTest {
     assertThat(r.route(m, u, result), is(NOT_FOUND));
     assertThat(result.params(), is(0));
     assertThat(result.isSuccess(), is(false));
+    assertThat(result.query(), is(nullValue()));
+    assertThat(result.queryStart(), is(-1));
+    assertThat(result.queryEnd(), is(-1));
+    try {
+      result.allowedMethods();
+      fail();
+    } catch (IllegalStateException ignore) {}try {
+      result.target();
+      fail();
+    } catch (IllegalStateException ignore) {}
+
   }
 
   private String toString(final CharSequence s) {
@@ -298,6 +309,11 @@ public class RouterTest {
         .route("GET", "/9-without-trailing-slash-nested/entity/<param>", "9")
         .route("GET", "/1x-ambigous", "10")
         .route("GET", "/1x-ambigous/", "11")
+        .route("GET", "/2x-fork", "20")
+        .route("GET", "/2x-fork/", "21")
+        .route("GET", "/2x-fork/a", "22")
+        .route("GET", "/2x-fork/b", "23")
+        .route("GET", "/2x-fork/<param>", "24")
         .optionalTrailingSlash(true)
         .build();
 
@@ -342,7 +358,17 @@ public class RouterTest {
     assertFail(r, "GET", "/9-without-trailing-slash-nested/entity/");
 
     assertSucc(r, "GET", "/1x-ambigous", "10", p());
+    assertFail(r, "GET", "/1x-ambigous-no-match");
     assertSucc(r, "GET", "/1x-ambigous/", "11", p());
+    assertFail(r, "GET", "/1x-ambigous/no-match");
+
+    assertSucc(r, "GET", "/2x-fork", "20", p());
+    assertSucc(r, "GET", "/2x-fork/", "21", p());
+    assertSucc(r, "GET", "/2x-fork/a", "22", p());
+    assertSucc(r, "GET", "/2x-fork/b", "23", p());
+    assertSucc(r, "GET", "/2x-fork/foo", "24", p("foo"));
+    assertSucc(r, "GET", "/2x-fork/afoo", "24", p("afoo"));
+    assertSucc(r, "GET", "/2x-fork/bfoo", "24", p("bfoo"));
   }
 
   private List<String> p(final String... params) {
