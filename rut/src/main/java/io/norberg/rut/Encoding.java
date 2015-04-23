@@ -11,7 +11,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 
-class Encoding {
+final class Encoding {
 
   private static final int INVALID = Integer.MIN_VALUE;
 

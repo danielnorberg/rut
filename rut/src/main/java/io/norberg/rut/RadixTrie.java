@@ -439,11 +439,15 @@ final class RadixTrie<T> {
     private final Trie<T> trie = new Trie<T>();
 
     Builder<T> insert(final CharSequence path, final T value) {
+      return insert(Path.of(path), value);
+    }
+
+    Builder<T> insert(final Path path, final T value) {
       trie.insert(path, value);
       return this;
     }
 
-    Builder<T> insert(final CharSequence path, final Trie.Visitor<T> visitor) {
+    Builder<T> insert(final Path path, final Trie.Visitor<T> visitor) {
       trie.insert(path, visitor);
       return this;
     }

@@ -17,10 +17,10 @@ import static io.norberg.rut.Router.Status.SUCCESS;
  */
 public final class Router<T> {
 
-  private final RadixTrie<Route<T>> trie;
+  private final RadixTrie<RouteTarget<T>> trie;
   private final boolean optionalTrailingSlash;
 
-  private Router(final RadixTrie<Route<T>> trie, final boolean optionalTrailingSlash) {
+  private Router(final RadixTrie<RouteTarget<T>> trie, final boolean optionalTrailingSlash) {
     this.trie = trie;
     this.optionalTrailingSlash = optionalTrailingSlash;
   }
@@ -48,7 +48,7 @@ public final class Router<T> {
    */
   public Status route(final CharSequence method, final CharSequence path, final Result<T> result) {
     result.captor.optionalTrailingSlash(optionalTrailingSlash);
-    final Route<T> route = trie.lookup(path, result.captor);
+    final RouteTarget<T> route = trie.lookup(path, result.captor);
     if (route == null) {
       return result.notFound().status();
     }
@@ -99,7 +99,6 @@ public final class Router<T> {
     private final String[] paramNames;
 
     private Target(final T target, final String[] paramNames) {
-
       this.target = target;
       this.paramNames = paramNames;
     }
@@ -115,7 +114,7 @@ public final class Router<T> {
     private Builder() {
     }
 
-    private final RadixTrie.Builder<Route<T>> trie = RadixTrie.builder();
+    private final RadixTrie.Builder<RouteTarget<T>> trie = RadixTrie.builder();
 
     /**
      * Create a new {@link Router} that will route requests to all endpoints registered with {@link
@@ -134,7 +133,18 @@ public final class Router<T> {
      *               this route.
      */
     public Builder<T> route(final String method, final String path, final T target) {
-      trie.insert(path, new RouteVisitor(method, target));
+      return route(Route.of(method, path), target);
+    }
+
+    /**
+     * Register a route.
+     *
+     * @param route  The route to register.
+     * @param target A routing target that will be returned when requests are successfully routed
+     *               to this route.
+     */
+    public Builder<T> route(final Route route, final T target) {
+      trie.insert(route.path(), new RouteVisitor(route, target));
       return this;
     }
 
@@ -152,33 +162,28 @@ public final class Router<T> {
     }
 
     /**
-     * A {@link Trie.Visitor} that adds a {@link Route} to the terminal {@link Trie.Node}.
+     * A {@link Trie.Visitor} that adds a {@link RouteTarget} to the terminal {@link Trie.Node}.
      */
-    private class RouteVisitor implements Trie.Visitor<Route<T>> {
+    private class RouteVisitor implements Trie.Visitor<RouteTarget<T>> {
 
-      private String[] paramNames;
 
-      private final String method;
+      private final Route route;
       private final T target;
 
-      public RouteVisitor(final String method, final T target) {
-        this.method = method;
+      public RouteVisitor(final Route route, final T target) {
+        this.route = route;
         this.target = target;
       }
 
       @Override
-      public void capture(final int i, final CharSequence s) {
-        paramNames[i] = s.toString();
-      }
-
-      @Override
-      public Route<T> finish(final int captures, final Route<T> currentValue) {
-        paramNames = new String[captures];
+      public RouteTarget<T> finish(final RouteTarget<T> currentValue) {
+        final List<String> captureNames = route.captureNames();
+        final String[] paramNames = captureNames.toArray(new String[captureNames.size()]);
         final Target<T> target = new Target<T>(this.target, paramNames);
         if (currentValue == null) {
-          return Route.of(method, target);
+          return RouteTarget.of(route.method(), target);
         }
-        return currentValue.with(method, target);
+        return currentValue.with(route.method(), target);
       }
     }
   }
@@ -193,7 +198,7 @@ public final class Router<T> {
     private final RadixTrie.Captor captor;
 
     private Status status;
-    private Route<T> route;
+    private RouteTarget<T> route;
     private Target<T> target;
     private CharSequence path;
 
@@ -289,7 +294,7 @@ public final class Router<T> {
     /**
      * Signal a route found but method not allowed.
      */
-    private Result<T> notAllowed(final Route<T> route) {
+    private Result<T> notAllowed(final RouteTarget<T> route) {
       this.status = METHOD_NOT_ALLOWED;
       this.route = route;
       this.target = null;
@@ -311,7 +316,7 @@ public final class Router<T> {
     /**
      * Signal a routing success.
      */
-    private Result<T> success(final CharSequence path, final Route<T> route,
+    private Result<T> success(final CharSequence path, final RouteTarget<T> route,
                               final Target<T> target) {
       this.status = SUCCESS;
       this.route = route;
@@ -357,14 +362,14 @@ public final class Router<T> {
   /**
    * Holder for route methods and target endpoints.
    */
-  private static class Route<T> {
+  private static class RouteTarget<T> {
 
     private final String method;
     private final Target<T> target;
-    private final Route<T> next;
+    private final RouteTarget<T> next;
     private final Collection<String> methods;
 
-    private Route(final String method, final Target<T> target, final Route<T> next) {
+    private RouteTarget(final String method, final Target<T> target, final RouteTarget<T> next) {
       this.method = method;
       this.target = target;
       this.next = next;
@@ -374,15 +379,15 @@ public final class Router<T> {
     /**
      * Create a new route.
      */
-    private static <T> Route<T> of(final String method, final Target<T> target) {
-      return new Route<T>(method, target, null);
+    private static <T> RouteTarget<T> of(final String method, final Target<T> target) {
+      return new RouteTarget<T>(method, target, null);
     }
 
     /**
      * Add a new method and target to this route.
      */
-    private Route<T> with(final String method, final Target<T> target) {
-      return new Route<T>(method, target, this);
+    private RouteTarget<T> with(final String method, final Target<T> target) {
+      return new RouteTarget<T>(method, target, this);
     }
 
     /**
@@ -391,7 +396,7 @@ public final class Router<T> {
      * @return The endpoint if the method matched. {@code null} otherwise.
      */
     private Target<T> lookup(final CharSequence method) {
-      Route<T> route = this;
+      RouteTarget<T> route = this;
       while (route != null) {
         if (equals(route.method, method)) {
           return route.target;
@@ -432,7 +437,7 @@ public final class Router<T> {
      */
     private Collection<String> methods0() {
       final List<String> methods = new ArrayList<String>();
-      Route<T> route = this;
+      RouteTarget<T> route = this;
       while (route != null) {
         methods.add(route.method);
         route = route.next;
