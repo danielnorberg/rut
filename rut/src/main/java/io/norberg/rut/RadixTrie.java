@@ -204,10 +204,9 @@ final class RadixTrie<T> {
         }
         for (int i = 0; i < tail.length; i++) {
           if (tail[i] != path.charAt(index + 1 + i)) {
-            // Trailing slash in path?
+            // Trailing slash in prefix?
             if (value != null && captor.optionalTrailingSlash && i == tail.length - 1
-                && tail[tail.length - 1] == SLASH &&
-                path.charAt(index + 1 + i) == QUERY) {
+                && tail[tail.length - 1] == SLASH && path.charAt(index + 1 + i) == QUERY) {
               captor.query(index + 2 + i, length);
               captor.match(capture);
               return value;
@@ -314,7 +313,7 @@ final class RadixTrie<T> {
           return value;
         }
 
-        // Trailing slash in path?
+        // Trailing slash in prefix?
         if (captor.optionalTrailingSlash) {
           if (limit + 1 == length) {
             captor.match(capture + 1);

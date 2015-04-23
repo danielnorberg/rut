@@ -139,12 +139,15 @@ public final class Router<T> {
     }
 
     /**
+     * Set trailing slash matching to be optional or not. When configured to be optional, trailing
+     * slash in both routed uris/paths and routes are disregarded. E.g., {@code /foo} may be routed
+     * to {@code /foo/} and conversely {@code /bar/} may be routed to {@code /bar}.
      *
-     * @param optionalTrailingSlash
-     * @return
+     * @param optional {@code true} if trailing slashes should be disregarded, {@code false} if
+     *                 trailing slashes should be strictly routed.
      */
-    public Builder<T> optionalTrailingSlash(final boolean optionalTrailingSlash) {
-      this.optionalTrailingSlash = optionalTrailingSlash;
+    public Builder<T> optionalTrailingSlash(final boolean optional) {
+      this.optionalTrailingSlash = optional;
       return this;
     }
 
