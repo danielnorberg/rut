@@ -69,7 +69,8 @@ public class RouterTest {
     try {
       result.allowedMethods();
       fail();
-    } catch (IllegalStateException ignored) {}
+    } catch (IllegalStateException ignored) {
+    }
   }
 
   @Test
@@ -284,11 +285,13 @@ public class RouterTest {
     try {
       result.allowedMethods();
       fail();
-    } catch (IllegalStateException ignore) {}try {
+    } catch (IllegalStateException ignore) {
+    }
+    try {
       result.target();
       fail();
-    } catch (IllegalStateException ignore) {}
-
+    } catch (IllegalStateException ignore) {
+    }
   }
 
   private String toString(final CharSequence s) {
