@@ -327,13 +327,13 @@ final class RadixTrie<T> {
           return value;
         }
 
-        // Trailing slash in prefix?
+        // Trailing slash in path?
         if (captor.optionalTrailingSlash) {
-          if (limit + 1 == length) {
+          if (limit + 1 == length) { // c == SLASH
             captor.match(capture + 1);
             captor.capture(capture, index, limit);
             return value;
-          } else if (path.charAt(limit + 1) == QUERY) {
+          } else if (path.charAt(limit + 1) == QUERY) { // limit + 1 < length
             captor.match(capture + 1);
             captor.capture(capture, index, i);
             captor.query(limit + 2, length);
