@@ -31,6 +31,7 @@ public class RoutingBenchmark {
   private static final String PATH = "/users/foo-user/blogs/bar-blog/posts/baz-post";
 
   private static final Router<String> ROUTER;
+  private static final Router<String> ROUTER_OPTIONAL_TRAILING_SLASH;
   private static final Router.Result<String> RESULT;
 
   static {
@@ -39,6 +40,8 @@ public class RoutingBenchmark {
       builder.route("GET", path, path);
     }
     ROUTER = builder.build();
+    builder.optionalTrailingSlash(true);
+    ROUTER_OPTIONAL_TRAILING_SLASH = builder.build();
     RESULT = ROUTER.result();
   }
 
@@ -75,6 +78,16 @@ public class RoutingBenchmark {
   @Benchmark
   public String radixTreeRouting() {
     ROUTER.route("GET", path, RESULT);
+    final String target = RESULT.target();
+    if (target == null) {
+      throw new AssertionError();
+    }
+    return target;
+  }
+
+  @Benchmark
+  public String radixTreeRoutingWithOptionalTrailingSlash() {
+    ROUTER_OPTIONAL_TRAILING_SLASH.route("GET", path, RESULT);
     final String target = RESULT.target();
     if (target == null) {
       throw new AssertionError();
