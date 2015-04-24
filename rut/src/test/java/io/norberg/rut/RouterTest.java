@@ -248,9 +248,10 @@ public class RouterTest {
   private void assertSucc(final Router<String> r, final String m,
                           final String u, final String t, final List<String> p) {
     assertSucc(r, m, u, t, p, null);
-    assertSucc(r, m, u + "?q", t, p, "q");
-    assertSucc(r, m, u + "?query", t, p, "query");
-    assertSucc(r, m, u + "?queryqueryqueryquery", t, p, "queryqueryqueryquery");
+    for (int i = 0; i < 32; i++) {
+      final String query = repeat("q", i);
+      assertSucc(r, m, u + "?" + query, t, p, query);
+    }
   }
 
   private <T> void assertSucc(final Router<T> router, final String method,
@@ -269,9 +270,9 @@ public class RouterTest {
 
   private void assertFail(final Router<String> r, final String m, final String u) {
     assertNotFound(r, m, u);
-    assertNotFound(r, m, u + "?q");
-    assertNotFound(r, m, u + "?query");
-    assertNotFound(r, m, u + "?queryqueryqueryquery");
+    for (int i = 0; i < 32; i++) {
+      assertNotFound(r, m, u + "?" + repeat("q", i));
+    }
   }
 
   private <T> void assertNotFound(final Router<T> r, final String m, final String u) {
@@ -301,6 +302,7 @@ public class RouterTest {
   @Test
   public void testOptionalTrailingSlash() {
     final Router<String> r = Router.builder(String.class)
+        .optionalTrailingSlash(true)
         .route("GET", "/1-without-trailing-slash", "1")
         .route("GET", "/2-without-trailing-slash/<param>", "2")
         .route("GET", "/3-with-trailing-slash/", "3")
@@ -320,7 +322,6 @@ public class RouterTest {
         .route("GET", "/", "25")
         .route("GET", "//", "26")
         .route("GET", "//<param:path>", "27")
-        .optionalTrailingSlash(true)
         .build();
 
     assertSucc(r, "GET", "/1-without-trailing-slash", "1", p());
@@ -383,7 +384,40 @@ public class RouterTest {
     assertSucc(r, "GET", "//foo/bar", "27", p("foo/bar"));
   }
 
+  /**
+   * Dirty tests that know too much about the internals.
+   */
+  @Test
+  public void testOptionalTrailingSlashEdgeCases() {
+    final Router<String> r = Router.builder(String.class)
+        .optionalTrailingSlash(true)
+        .route("GET", "1-shortfork1/1", "")
+        .route("GET", "1-shortfork1/2", "")
+        .route("GET", "1-shortfork1-", "")
+        .route("GET", "2-longfork1/tail", "")
+        .route("GET", "2-longfork1atail", "")
+        .route("GET", "3-foo/", "")
+        .route("GET", "4-foo", "")
+        .route("GET", "5-foo/", "5")
+        .route("GET", "5-foo_", "")
+        .build();
+
+    assertFail(r, "GET", "1-shortfork1");
+    assertFail(r, "GET", "2-longfork1");
+    assertFail(r, "GET", "3-f");
+    assertFail(r, "GET", "4-fo_");
+    assertSucc(r, "GET", "5-foo", "5", p());
+  }
+
   private List<String> p(final String... params) {
     return asList(params);
+  }
+
+  private String repeat(final String s, final int n) {
+    final StringBuilder b = new StringBuilder(s.length() * n);
+    for (int i = 0; i < n; i++) {
+      b.append(s);
+    }
+    return b.toString();
   }
 }

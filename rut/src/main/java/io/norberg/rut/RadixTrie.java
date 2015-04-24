@@ -195,21 +195,33 @@ final class RadixTrie<T> {
         next = index + 1 + tail.length;
         if (next > length) {
           // Trailing slash in prefix?
-          if (value != null && captor.optionalTrailingSlash && tail[tail.length - 1] == SLASH &&
-              next == length + 1) {
-            captor.match(capture);
-            return value;
+          if (captor.optionalTrailingSlash) {
+            if (value != null &&
+                tail[tail.length - 1] == SLASH &&
+                next == length + 1) {
+              for (int i = 0; i < tail.length - 1; i++) {
+                if (tail[i] != path.charAt(index + 1 + i)) {
+                  return null;
+                }
+              }
+              captor.match(capture);
+              return value;
+            }
           }
           return null;
         }
         for (int i = 0; i < tail.length; i++) {
           if (tail[i] != path.charAt(index + 1 + i)) {
             // Trailing slash in prefix?
-            if (value != null && captor.optionalTrailingSlash && i == tail.length - 1
-                && tail[tail.length - 1] == SLASH && path.charAt(index + 1 + i) == QUERY) {
-              captor.query(index + 2 + i, length);
-              captor.match(capture);
-              return value;
+            if (captor.optionalTrailingSlash) {
+              if (value != null &&
+                  i == tail.length - 1 &&
+                  tail[tail.length - 1] == SLASH &&
+                  path.charAt(index + 1 + i) == QUERY) {
+                captor.query(index + 2 + i, length);
+                captor.match(capture);
+                return value;
+              }
             }
             return null;
           }
@@ -248,14 +260,16 @@ final class RadixTrie<T> {
       }
 
       // Trailing slash in path?
-      if (this.value != null && captor.optionalTrailingSlash && c == SLASH) {
-        if (next + 1 == length) {
-          captor.match(capture);
-          return this.value;
-        } else if (path.charAt(next + 1) == QUERY) {
-          captor.match(capture);
-          captor.query(next + 2, length);
-          return this.value;
+      if (captor.optionalTrailingSlash) {
+        if (this.value != null && c == SLASH) {
+          if (next + 1 == length) {
+            captor.match(capture);
+            return this.value;
+          } else if (path.charAt(next + 1) == QUERY) {
+            captor.match(capture);
+            captor.query(next + 2, length);
+            return this.value;
+          }
         }
       }
 
