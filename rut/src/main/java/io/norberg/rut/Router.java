@@ -18,9 +18,11 @@ import static io.norberg.rut.Router.Status.SUCCESS;
 public final class Router<T> {
 
   private final RadixTrie<Route<T>> trie;
+  private final boolean optionalTrailingSlash;
 
-  private Router(final RadixTrie<Route<T>> trie) {
+  private Router(final RadixTrie<Route<T>> trie, final boolean optionalTrailingSlash) {
     this.trie = trie;
+    this.optionalTrailingSlash = optionalTrailingSlash;
   }
 
   public static <T> Builder<T> builder() {
@@ -45,6 +47,7 @@ public final class Router<T> {
    * if the endpoint was found but the method did not match.
    */
   public Status route(final CharSequence method, final CharSequence path, final Result<T> result) {
+    result.captor.optionalTrailingSlash(optionalTrailingSlash);
     final Route<T> route = trie.lookup(path, result.captor);
     if (route == null) {
       return result.notFound().status();
@@ -107,6 +110,8 @@ public final class Router<T> {
    */
   public static class Builder<T> {
 
+    private boolean optionalTrailingSlash;
+
     private Builder() {
     }
 
@@ -117,7 +122,7 @@ public final class Router<T> {
      * #route}.
      */
     public Router<T> build() {
-      return new Router<T>(trie.build());
+      return new Router<T>(trie.build(), optionalTrailingSlash);
     }
 
     /**
@@ -130,6 +135,19 @@ public final class Router<T> {
      */
     public Builder<T> route(final String method, final String path, final T target) {
       trie.insert(path, new RouteVisitor(method, target));
+      return this;
+    }
+
+    /**
+     * Set trailing slash matching to be optional or not. When configured to be optional, trailing
+     * slash in both routed uris/paths and routes are disregarded. E.g., {@code /foo} may be routed
+     * to {@code /foo/} and conversely {@code /bar/} may be routed to {@code /bar}.
+     *
+     * @param optional {@code true} if trailing slashes should be disregarded, {@code false} if
+     *                 trailing slashes should be strictly routed.
+     */
+    public Builder<T> optionalTrailingSlash(final boolean optional) {
+      this.optionalTrailingSlash = optional;
       return this;
     }
 
