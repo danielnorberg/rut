@@ -1,5 +1,6 @@
 package io.norberg.rut;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -23,33 +24,37 @@ public class RadixTrieTest {
 
   @Test
   public void testSingleRoot() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("a"), is("a"));
   }
 
   @Test
   public void testSingleRootNoMatch() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("aaa", "aaa")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("aa"), is(nullValue()));
   }
 
   @Test
   public void testCaptureSuffixMismatch() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("aaa<value>bbb", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("aaabb"), is(nullValue()));
   }
 
   @Test
   public void testCaptureNoMatchCaptorValueThrows() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("aaa<value>bbb", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     rdx.lookup("aaabb", captor);
     exception.expect(IllegalStateException.class);
@@ -58,9 +63,10 @@ public class RadixTrieTest {
 
   @Test
   public void testCaptureNoMatchCaptorValueStartThrows() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("aaa<value>bbb", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     rdx.lookup("aaabb", captor);
     exception.expect(IllegalStateException.class);
@@ -69,9 +75,10 @@ public class RadixTrieTest {
 
   @Test
   public void testCaptureNoMatchCaptorValueEndThrows() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("aaa<value>bbb", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     rdx.lookup("aaabb", captor);
     exception.expect(IllegalStateException.class);
@@ -80,9 +87,10 @@ public class RadixTrieTest {
 
   @Test
   public void testCaptureMatchCaptorValueIndexOutOfBoundsThrows() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a<value>b", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     rdx.lookup("afoob", captor);
     exception.expect(IndexOutOfBoundsException.class);
@@ -92,9 +100,10 @@ public class RadixTrieTest {
 
   @Test
   public void testCaptureMatchCaptorValueStartIndexOutOfBoundsThrows() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a<value>b", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     rdx.lookup("afoob", captor);
     exception.expect(IndexOutOfBoundsException.class);
@@ -104,9 +113,10 @@ public class RadixTrieTest {
 
   @Test
   public void testCaptureMatchCaptorValueEndIndexOutOfBoundsThrows() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a<value>b", "foobar")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     rdx.lookup("afoob", captor);
     exception.expect(IndexOutOfBoundsException.class);
@@ -115,39 +125,43 @@ public class RadixTrieTest {
 
   @Test
   public void testSingleRootCapture() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("<a>", "<a>")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("foobar"), is("<a>"));
   }
 
   @Test
   public void testTwoRoots() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .insert("b", "b")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("b"), is("b"));
   }
 
   @Test
   public void testOneRootOneEdge() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .insert("ab", "ab")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("ab"), is("ab"));
   }
 
   @Test
   public void testOneRootTwoEdges() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .insert("ab", "ab")
         .insert("ac", "ac")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("ab"), is("ab"));
     assertThat(rdx.lookup("ac"), is("ac"));
@@ -155,11 +169,12 @@ public class RadixTrieTest {
 
   @Test
   public void testOneRootOneEdgeSplit() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a", "a")
         .insert("abbb", "abbb")
         .insert("abcc", "abcc")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("abbb"), is("abbb"));
     assertThat(rdx.lookup("abcc"), is("abcc"));
@@ -167,20 +182,22 @@ public class RadixTrieTest {
 
   @Test
   public void testOneRootOneEdgeReverse() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("ab", "ab")
         .insert("a", "a")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     assertThat(rdx.lookup("a"), is("a"));
     assertThat(rdx.lookup("ab"), is("ab"));
   }
 
   @Test
   public void testQueryAtSplitDoesNotMatch() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a1", "a1")
         .insert("a2", "a2")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     assertThat(rdx.lookup("a?q", captor), is(nullValue()));
     assertThat(captor.isMatch(), is(false));
@@ -190,10 +207,11 @@ public class RadixTrieTest {
 
   @Test
   public void testEndAtSplitDoesNotMatch() {
-    RadixTrie<String> rdx = RadixTrie.builder(String.class)
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("a1", "a1")
         .insert("a2", "a2")
         .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
     final RadixTrie.Captor captor = rdx.captor();
     assertThat(rdx.lookup("a", captor), is(nullValue()));
     assertThat(captor.isMatch(), is(false));

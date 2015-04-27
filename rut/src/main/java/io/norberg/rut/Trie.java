@@ -13,77 +13,75 @@ final class Trie<T> {
   private static final char CAPTURE_SEG = 0x1000;
   private static final char CAPTURE_PATH = 0x2000;
 
-  private static final String TYPE_PATH = "path";
-
   private final Map<Character, Node<T>> roots = new TreeMap<Character, Node<T>>();
 
-  T insert(final CharSequence path, final T value) {
+  T insert(final Path path, final T value) {
     return insert(path, new DefaultVisitor(value));
   }
 
-  T insert(final CharSequence path, final Visitor<T> visitor) {
-    if (path.length() == 0) {
-      throw new IllegalArgumentException();
-    }
-    return insert(roots, path, 0, 0, visitor);
+  T insert(final Path path, final Visitor<T> visitor) {
+    return insert(path, null, roots, 0, visitor);
   }
 
-  private static <T> T insert(final Map<Character, Node<T>> nodes, final CharSequence path,
-                              final int i, final int captureIndex, final Visitor<T> visitor) {
-    final char c = path.charAt(i);
-    // TODO (dano): stricter input validation
-    if (c > 127) {
-      throw new IllegalArgumentException();
+  private static <T> T insert(final Path path, final Node<T> node,
+                              final Map<Character, Node<T>> edges,
+                              final int partIndex, final Visitor<T> visitor) {
+    if (partIndex == path.parts().size()) {
+      final T old = node.value;
+      node.value = visitor.finish(node.value);
+      return old;
     }
-    switch (c) {
-      case '<':
-        final int end = indexOf(path, '>', i + 1, path.length());
-        if (end == -1) {
-          throw new IllegalArgumentException(
-              "unclosed capture: " + path.subSequence(i, path.length()).toString());
-        }
-        final String type = captureType(path, i, end);
-        if (TYPE_PATH.equals(type)) {
-          if (end + 1 != path.length()) {
-            throw new IllegalArgumentException("path capture must be last");
-          }
-          Node<T> capture = nodes.get(CAPTURE_PATH);
-          if (capture == null) {
-            capture = new Node<T>(CAPTURE_PATH);
-            nodes.put(CAPTURE_PATH, capture);
-          }
-          final T old = capture.value;
-          capture.value = visitor.finish(captureIndex + 1, capture.value);
-          return old;
-        } else if (type == null) {
-          Node<T> capture = nodes.get(CAPTURE_SEG);
-          if (capture == null) {
-            capture = new Node<T>(CAPTURE_SEG);
-            nodes.put(CAPTURE_SEG, capture);
-          }
-          final T value = capture.extend(path, end + 1, captureIndex + 1, visitor);
-          visitor.capture(captureIndex, path.subSequence(i + 1, end));
-          return value;
-        } else {
-          throw new IllegalArgumentException("Unknown capture type: " + type);
-        }
 
-      default:
-        Node<T> next = nodes.get(c);
-        if (next == null) {
-          next = new Node<T>(c);
-          nodes.put(c, next);
-        }
-        return next.extend(path, i + 1, captureIndex, visitor);
+    final Path.Part part = path.parts().get(partIndex);
+
+    if (part instanceof Path.Match) {
+      return insertMatch(path, node, edges, partIndex, visitor, (Path.Match) part, 0);
     }
+    if (part instanceof Path.CaptureSegment) {
+      return insertCaptureSegment(path, edges, partIndex, visitor);
+    }
+    // part instanceof Path.CapturePath
+    return insertCapturePath(edges, visitor);
   }
 
-  private static String captureType(final CharSequence path, final int i, final int end) {
-    final int colon = indexOf(path, ':', i + 1, end);
-    if (colon == -1) {
-      return null;
+  private static <T> T insertCapturePath(final Map<Character, Node<T>> edges,
+                                         final Visitor<T> visitor) {
+    Node<T> capture = edges.get(CAPTURE_PATH);
+    if (capture == null) {
+      capture = new Node<T>(CAPTURE_PATH);
+      edges.put(CAPTURE_PATH, capture);
     }
-    return path.subSequence(colon + 1, end).toString();
+    final T old = capture.value;
+    capture.value = visitor.finish(capture.value);
+    return old;
+  }
+
+  private static <T> T insertCaptureSegment(final Path path, final Map<Character, Node<T>> edges,
+                                            final int partIndex, final Visitor<T> visitor) {
+    Node<T> capture = edges.get(CAPTURE_SEG);
+    if (capture == null) {
+      capture = new Node<T>(CAPTURE_SEG);
+      edges.put(CAPTURE_SEG, capture);
+    }
+    return insert(path, capture, capture.edges, partIndex + 1, visitor);
+  }
+
+  private static <T> T insertMatch(final Path path, final Node<T> node,
+                                   final Map<Character, Node<T>> edges,
+                                   final int pi, final Visitor<T> visitor,
+                                   final Path.Match part, final int ci) {
+    final String string = part.string();
+    if (ci == string.length()) {
+      return insert(path, node, edges, pi + 1, visitor);
+    }
+    final char c = string.charAt(ci);
+    Node<T> next = edges.get(c);
+    if (next == null) {
+      next = new Node<T>(c);
+      edges.put(c, next);
+    }
+
+    return insertMatch(path, next, next.edges, pi, visitor, part, ci + 1);
   }
 
   RadixTrie<T> compress() {
@@ -113,16 +111,6 @@ final class Trie<T> {
     private Node(final char c, final T value) {
       this.c = c;
       this.value = value;
-    }
-
-    private T extend(final CharSequence path, final int i,
-                     final int captureIndex, final Visitor<T> visitor) {
-      if (i == path.length()) {
-        final T old = value;
-        value = visitor.finish(captureIndex, value);
-        return old;
-      }
-      return insert(edges, path, i, captureIndex, visitor);
     }
 
     private RadixTrie.Node<T> compress(final RadixTrie.Node<T> sibling) {
@@ -190,11 +178,9 @@ final class Trie<T> {
            '}';
   }
 
-  public interface Visitor<T> {
+  interface Visitor<T> {
 
-    void capture(final int i, final CharSequence s);
-
-    T finish(final int captures, final T currentValue);
+    T finish(final T currentValue);
   }
 
   /**
@@ -209,11 +195,7 @@ final class Trie<T> {
     }
 
     @Override
-    public void capture(final int i, final CharSequence s) {
-    }
-
-    @Override
-    public T finish(final int captures, final T currentValue) {
+    public T finish(final T currentValue) {
       return value;
     }
   }
@@ -222,15 +204,5 @@ final class Trie<T> {
     final List<T> list = new ArrayList<T>(values);
     reverse(list);
     return list;
-  }
-
-  private static int indexOf(final CharSequence sequence, final char needle, final int index,
-                             final int end) {
-    for (int i = index; i < end; i++) {
-      if (sequence.charAt(i) == needle) {
-        return i;
-      }
-    }
-    return -1;
   }
 }
