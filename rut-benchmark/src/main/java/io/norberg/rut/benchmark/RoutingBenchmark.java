@@ -29,6 +29,7 @@ public class RoutingBenchmark {
   };
 
   private static final String PATH = "/users/foo-user/blogs/bar-blog/posts/baz-post";
+  private static final String NOT_FOUND_PATH = "/users/foo-user/blogs/bar-blog/followers/foo";
 
   private static final Router<String> ROUTER;
   private static final Router<String> ROUTER_OPTIONAL_TRAILING_SLASH;
@@ -57,11 +58,13 @@ public class RoutingBenchmark {
   }
 
   private String path;
+  private String notFoundPath;
   private Pattern[] uriPatterns;
 
   @Setup
   public void setup() {
     path = PATH;
+    notFoundPath = NOT_FOUND_PATH;
     uriPatterns = PATTERNS;
   }
 
@@ -76,6 +79,16 @@ public class RoutingBenchmark {
   }
 
   @Benchmark
+  public Pattern regexRoutingNotFound() {
+    for (final Pattern pattern : uriPatterns) {
+      if (pattern.matcher(notFoundPath).matches()) {
+        return pattern;
+      }
+    }
+    return null;
+  }
+
+  @Benchmark
   public String radixTreeRouting() {
     ROUTER.route("GET", path, RESULT);
     final String target = RESULT.target();
@@ -83,6 +96,15 @@ public class RoutingBenchmark {
       throw new AssertionError();
     }
     return target;
+  }
+
+  @Benchmark
+  public String radixTreeRoutingNotFound() {
+    ROUTER.route("GET", notFoundPath, RESULT);
+    if (RESULT.isSuccess()) {
+      return RESULT.target();
+    }
+    return null;
   }
 
   @Benchmark
