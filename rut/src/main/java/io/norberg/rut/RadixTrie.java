@@ -196,9 +196,9 @@ final class RadixTrie<T> {
         if (next > length) {
           // Trailing slash in prefix?
           if (captor.optionalTrailingSlash) {
-            if (value != null &&
-                tail[tail.length - 1] == SLASH &&
-                next == length + 1) {
+            if (next == length + 1 &&
+                value != null &&
+                tail[tail.length - 1] == SLASH) {
               for (int i = 0; i < tail.length - 1; i++) {
                 if (tail[i] != path.charAt(index + 1 + i)) {
                   return null;
