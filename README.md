@@ -64,7 +64,7 @@ out.println("query: " + result.query());
 out.println("allowed methods: " + result.allowedMethods());
 ```
 
-Output: 
+Output:
 ```
 handler: create user blog post
 param 0: user=foo-user (foo-user)
@@ -79,7 +79,7 @@ allowed methods: [POST, GET]
 <dependency>
   <groupId>io.norberg</groupId>
   <artifactId>rut</artifactId>
-  <version>0.5</version>
+  <version>0.8</version>
 </dependency>
 ```
 
