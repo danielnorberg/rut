@@ -41,6 +41,17 @@ public class RadixTrieTest {
   }
 
   @Test
+  public void testCaptureTwoEdges() {
+    final RadixTrie<String> rdx = RadixTrie.builder(String.class)
+        .insert("<value>foo", "foo")
+        .insert("<value>bar", "bar")
+        .build();
+    assertThat(rdx.toString(), not(Matchers.isEmptyOrNullString()));
+    assertThat(rdx.lookup("somefoo"), is("foo"));
+    assertThat(rdx.lookup("somebar"), is("bar"));
+  }
+
+  @Test
   public void testCaptureSuffixMismatch() {
     final RadixTrie<String> rdx = RadixTrie.builder(String.class)
         .insert("aaa<value>bbb", "foobar")
