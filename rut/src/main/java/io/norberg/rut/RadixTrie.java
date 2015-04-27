@@ -57,6 +57,8 @@ final class RadixTrie<T> {
 
   static final class Node<T> {
 
+    private static final byte[] FULL_SEG = new byte[0];
+
     private final byte head;
     private final byte[] tail;
     private final Node<T> sibling;
@@ -344,11 +346,20 @@ final class RadixTrie<T> {
 
       // Fanout
       if (edge != null) {
-        for (i = limit; i >= index; i--) {
-          final T value = fanout(edge, path, i, captor, capture + 1);
-          if (value != null) {
-            captor.capture(capture, index, i);
-            return value;
+        T value = fanout(edge, path, i, captor, capture + 1);
+        if (value != null) {
+          captor.capture(capture, index, i);
+          return value;
+        }
+
+        // Capturing a partial segment, back-track.
+        if (tail != FULL_SEG) {
+          for (i = limit - 1; i >= index; i--) {
+            value = fanout(edge, path, i, captor, capture + 1);
+            if (value != null) {
+              captor.capture(capture, index, i);
+              return value;
+            }
           }
         }
       }
@@ -378,6 +389,14 @@ final class RadixTrie<T> {
              "e=" + prefixes(edge) +
              ", v=" + (value == null ? "" : value.toString()) +
              '}';
+    }
+
+    public static <T> Node<T> terminalCaptureSeg(final Node<T> sibling, final T value) {
+      return new Node<T>(CAPTURE_SEG, FULL_SEG, sibling, null, value);
+    }
+
+    public static <T> Node<T> captureFullSeg(final Node<T> sibling, final Node<T> edge, final T value) {
+      return new Node<T>(CAPTURE_SEG, FULL_SEG, sibling, edge, value);
     }
 
     static <T> Node<T> captureSeg(final Node<T> sibling, final Node<T> edge, final T value) {
