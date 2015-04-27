@@ -135,14 +135,6 @@
           <!-- aggregated reports for multi-module projects -->
           <aggregate>true</aggregate>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>clean</goal>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
