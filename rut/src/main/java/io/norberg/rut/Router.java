@@ -57,7 +57,26 @@ public final class Router<T> {
       return result.notAllowed(route).status();
     }
     return result.success(path, route, target).status();
+  }
 
+  /**
+   * Route a path.
+   *
+   * @param path   The request path. E.g. {@code /foo/baz/bar}.
+   * @param result A {@link Result} for storing the routing result, target and captured parameters.
+   *               The {@link Result} should have enough capacity to store all captured parameters.
+   *               See {@link #result()}.
+   * @return Routing status. {@link Status#SUCCESS} if an endpoint and matching method was found.
+   * {@link Status#NOT_FOUND} if the endpoint could not be found, {@link Status#METHOD_NOT_ALLOWED}
+   * if the endpoint was found but the method did not match.
+   */
+  public Status route(final CharSequence path, final Result<T> result) {
+    result.captor.optionalTrailingSlash(optionalTrailingSlash);
+    final RouteTarget<T> route = trie.lookup(path, result.captor);
+    if (route == null) {
+      return result.notFound().status();
+    }
+    return result.success(path, route, null).status();
   }
 
   /**
@@ -355,7 +374,14 @@ public final class Router<T> {
       if (route == null) {
         throw new IllegalStateException("not matched");
       }
-      return route.methods();
+      return route.methods;
+    }
+
+    public Collection<T> targets() {
+      if (route == null) {
+        throw new IllegalStateException("not matched");
+      }
+      return route.targets;
     }
   }
 
@@ -368,12 +394,14 @@ public final class Router<T> {
     private final Target<T> target;
     private final RouteTarget<T> next;
     private final Collection<String> methods;
+    private final List<T> targets;
 
     private RouteTarget(final String method, final Target<T> target, final RouteTarget<T> next) {
       this.method = method;
       this.target = target;
       this.next = next;
       this.methods = methods0();
+      this.targets = targets0();
     }
 
     /**
@@ -426,13 +454,6 @@ public final class Router<T> {
     }
 
     /**
-     * Get a {@link Collection} of {@link String} with all methods allowed by this endpoint.
-     */
-    public Collection<String> methods() {
-      return methods;
-    }
-
-    /**
      * Create a list of all methods allowed by this endpoint.
      */
     private Collection<String> methods0() {
@@ -443,6 +464,16 @@ public final class Router<T> {
         route = route.next;
       }
       return Collections.unmodifiableList(methods);
+    }
+
+    private List<T> targets0() {
+      final List<T> targets = new ArrayList<T>();
+      RouteTarget<T> route = this;
+      while (route != null) {
+        targets.add(route.target.target);
+        route = route.next;
+      }
+      return Collections.unmodifiableList(targets);
     }
   }
 }
