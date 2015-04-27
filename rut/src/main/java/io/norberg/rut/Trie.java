@@ -100,6 +100,8 @@ final class Trie<T> {
 
   private final static class Node<T> {
 
+    private static final char SLASH = '/';
+
     private final char c;
     private final Map<Character, Node<T>> edges = new TreeMap<Character, Node<T>>();
     private T value;
@@ -125,6 +127,15 @@ final class Trie<T> {
 
     private RadixTrie.Node<T> compress(final RadixTrie.Node<T> sibling) {
       if (c == CAPTURE_SEG) {
+        if (edges.size() == 0) {
+          return RadixTrie.Node.terminalCaptureSeg(sibling, value);
+        }
+        if (edges.size() == 1) {
+          final Node<T> edge = edges.values().iterator().next();
+          if (edge.c == SLASH) {
+            return RadixTrie.Node.captureFullSeg(sibling, compressEdges(edges), value);
+          }
+        }
         return RadixTrie.Node.captureSeg(sibling, compressEdges(edges), value);
       } else if (c == CAPTURE_PATH) {
         return RadixTrie.Node.capturePath(sibling, value);
