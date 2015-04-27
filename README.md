@@ -86,7 +86,7 @@ allowed methods: [POST, GET]
 Notes
 -----
 
-* *rut* only handles ascii. Paths should be URL encoded when routed.
+* Route paths must be URL encoded when registered.
 
 
 Benchmarks
