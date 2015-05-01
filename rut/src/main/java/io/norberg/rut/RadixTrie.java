@@ -4,7 +4,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.norberg.rut.RadixTrie.Node.fanout;
+import static io.norberg.rut.RadixTrie.Node.flatFanout;
 import static java.lang.Math.max;
 
 final class RadixTrie<T> {
@@ -31,7 +31,7 @@ final class RadixTrie<T> {
 
   T lookup(final CharSequence path, final Captor captor) {
     captor.reset();
-    return fanout(root, path, 0, captor, 0);
+    return flatFanout(root, path, 0, captor, 0);
   }
 
   int captures() {
@@ -159,6 +159,139 @@ final class RadixTrie<T> {
         node = node.sibling;
       } while (node != null);
 
+      return null;
+    }
+
+    static <T> T flatFanout(final Node<T> root, final CharSequence path, int index,
+                            final Captor captor, final int capture) {
+      if (index == path.length()) {
+        return terminalFanout(root, captor, capture);
+      }
+
+      char c = path.charAt(index);
+
+      Node<T> node = root;
+      byte head;
+      T value;
+
+      if (c == QUERY) {
+        return terminalFanout(root, captor, capture);
+      }
+
+      // Seek single potential matching node. This will be at any place in the ordered list.
+      while (node != null) {
+        head = node.head;
+        if (head < 0) {
+          break;
+        }
+        if (head == c) {
+          // Match prefix
+          final int length = path.length();
+          final int next;
+          if (node.tail == null) {
+            next = index + 1;
+          } else {
+            next = index + 1 + node.tail.length;
+            if (next > length) {
+              // Trailing slash in prefix?
+              if (captor.optionalTrailingSlash) {
+                if (next == length + 1 &&
+                    node.value != null &&
+                    node.tail[node.tail.length - 1] == SLASH) {
+                  for (int i = 0; i < node.tail.length - 1; i++) {
+                    if (node.tail[i] != path.charAt(index + 1 + i)) {
+                      return null;
+                    }
+                  }
+                  captor.match(capture);
+                  return node.value;
+                }
+              }
+              return null;
+            }
+            for (int i = 0; i < node.tail.length; i++) {
+              if (node.tail[i] != path.charAt(index + 1 + i)) {
+                // Trailing slash in prefix?
+                if (captor.optionalTrailingSlash) {
+                  if (node.value != null &&
+                      i == node.tail.length - 1 &&
+                      node.tail[node.tail.length - 1] == SLASH &&
+                      path.charAt(index + 1 + i) == QUERY) {
+                    captor.query(index + 2 + i, length);
+                    captor.match(capture);
+                    return node.value;
+                  }
+                }
+                return null;
+              }
+            }
+          }
+
+          // Terminal?
+          if (next == length) {
+            if (node.value != null) {
+              captor.match(capture);
+              return node.value;
+            }
+            return terminalFanout(node.edge, captor, capture);
+          }
+
+          // Query?
+          c = path.charAt(next);
+          if (c == QUERY) {
+            if (node.value != null) {
+              captor.query(next + 1, length);
+              captor.match(capture);
+              return node.value;
+            }
+            value = terminalFanout(node.edge, captor, capture);
+            if (value != null) {
+              captor.query(next + 1, length);
+              return value;
+            }
+            return null;
+          }
+
+          // Trailing slash in path?
+          if (captor.optionalTrailingSlash) {
+            if (node.value != null && c == SLASH) {
+              if (next + 1 == length) {
+                captor.match(capture);
+                return node.value;
+              } else if (path.charAt(next + 1) == QUERY) {
+                captor.match(capture);
+                captor.query(next + 2, length);
+                return node.value;
+              }
+            }
+          }
+
+          // Edge fanout
+          node = node.edge;
+          index = next;
+          continue;
+        }
+        if (node.sibling == null) {
+          break;
+        }
+        node = node.sibling;
+      }
+
+//      // Seek potential capture nodes. These can be the second two last nodes in the list,
+//      // with the seg capture node before the path capture node.
+//      do {
+//        if (node.head == CAPTURE_SEG) {
+//          final T value = node.captureSeg(path, index, captor, capture);
+//          if (value != null) {
+//            return value;
+//          }
+//        }
+//        if (node.head == CAPTURE_PATH) {
+//          return node.capturePath(path, index, captor, capture);
+//        }
+//        node = node.sibling;
+//      } while (node != null);
+//
       return null;
     }
 
