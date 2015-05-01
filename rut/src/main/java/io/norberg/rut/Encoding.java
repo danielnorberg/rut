@@ -6,8 +6,9 @@ package io.norberg.rut;
 
 import java.nio.CharBuffer;
 
-import static java.lang.Character.highSurrogate;
-import static java.lang.Character.lowSurrogate;
+import static java.lang.Character.MIN_HIGH_SURROGATE;
+import static java.lang.Character.MIN_LOW_SURROGATE;
+import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
 
 final class Encoding {
 
@@ -105,8 +106,9 @@ final class Encoding {
       if (cp == INVALID) {
         return null;
       }
-      cb.append(highSurrogate(cp));
-      cb.append(lowSurrogate(cp));
+      final int offset = cp - MIN_SUPPLEMENTARY_CODE_POINT;
+      cb.append((char) ((offset >>> 10) + MIN_HIGH_SURROGATE));
+      cb.append((char) ((offset & 0x3ff) + MIN_LOW_SURROGATE));
     }
 
     cb.flip();
@@ -204,6 +206,7 @@ final class Encoding {
 
   /**
    * Read a 2 byte UTF8 sequence.
+   *
    * @return the resulting code point or {@link #INVALID} if invalid.
    */
   private static int utf8Read2(int cu1, int cu2) {
@@ -215,6 +218,7 @@ final class Encoding {
 
   /**
    * Read a 3 byte UTF8 sequence.
+   *
    * @return the resulting code point or {@link #INVALID} if invalid.
    */
   private static int utf8Read3(int cu1, int cu2, int cu3) {
@@ -233,6 +237,7 @@ final class Encoding {
 
   /**
    * Read a 4 byte UTF8 sequence.
+   *
    * @return the resulting code point or {@link #INVALID} if invalid.
    */
   private static int utf8Read4(int cu1, int cu2, int cu3, int cu4) {
