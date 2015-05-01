@@ -4,12 +4,11 @@
 
 package io.norberg.rut;
 
-import sun.nio.cs.ThreadLocalCoders;
-
-import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
+
+import static java.lang.Character.MIN_HIGH_SURROGATE;
+import static java.lang.Character.MIN_LOW_SURROGATE;
+import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
 
 final class Encoding {
 
@@ -33,18 +32,14 @@ final class Encoding {
   }
 
   /**
-   * Percent decode a {@link CharSequence}. Returns null if invalid.
+   * Percent and UTF8 decode a {@link CharSequence}. Returns null if invalid.
    *
    * @param s Percent encoded {@link CharSequence}.
    * @return Decoded CharSequence or null if invalid encoding.
    */
   private static CharSequence decode0(final CharSequence s) {
-    final CharsetDecoder dec = ThreadLocalCoders.decoderFor("UTF-8")
-        .onMalformedInput(CodingErrorAction.REPLACE)
-        .onUnmappableCharacter(CodingErrorAction.REPLACE);
     final int length = s.length();
     final CharBuffer cb = CharBuffer.allocate(length);
-    ByteBuffer bb = null;
 
     for (int i = 0; i < length; ) {
       final char c = s.charAt(i);
@@ -56,50 +51,68 @@ final class Encoding {
         continue;
       }
 
-      // Ascii?
-      int b = decodePercent(s, length, i);
-      if (b == INVALID) {
+      // UTF8 - 1 Byte
+      int b1 = decodePercent(s, length, i);
+      if (b1 == INVALID) {
         return null;
       }
       i += 3;
-      if (isAscii((byte) b)) {
-        cb.append((char) b);
+      final int n = utf8Length(b1);
+      if (n == INVALID) {
+        return null;
+      }
+      if (n == 1) {
+        cb.append((char) b1);
         continue;
       }
 
-      // UTF-8
-
-      // TODO (dano): manually decode code point and eliminate this temp buffer allocation
-      if (bb == null) {
-        bb = ByteBuffer.allocate(length);
+      // UTF8 - 2 Bytes
+      final int b2 = decodePercent(s, length, i);
+      if (b2 == INVALID) {
+        return null;
       }
-
-      // Decode the percent encoded characters to raw UTF-8.
-      bb.put((byte) b);
-      for (; i < length && s.charAt(i) == '%'; i += 3) {
-        b = decodePercent(s, length, i);
-        if (b == INVALID) {
+      i += 3;
+      if (n == 2) {
+        final int cp = utf8Read2(b1, b2);
+        if (cp == INVALID) {
           return null;
         }
-        bb.put((byte) b);
+        cb.append((char) cp);
+        continue;
       }
-      bb.flip();
 
-      // Decode the raw UTF-8 to characters.
-      dec.decode(bb, cb, true);
-      bb.position(0).limit(bb.capacity());
-      dec.reset();
+      // UTF8 - 3 Bytes
+      final int b3 = decodePercent(s, length, i);
+      if (b3 == INVALID) {
+        return null;
+      }
+      i += 3;
+      if (n == 3) {
+        final int cp = utf8Read3(b1, b2, b3);
+        if (cp == INVALID) {
+          return null;
+        }
+        cb.append((char) cp);
+        continue;
+      }
+
+      // UTF8 - 4 Bytes
+      final int b4 = decodePercent(s, length, i);
+      if (b4 == INVALID) {
+        return null;
+      }
+      i += 3;
+      final int cp = utf8Read4(b1, b2, b3, b4);
+      if (cp == INVALID) {
+        return null;
+      }
+      final int offset = cp - MIN_SUPPLEMENTARY_CODE_POINT;
+      cb.append((char) ((offset >>> 10) + MIN_HIGH_SURROGATE));
+      cb.append((char) ((offset & 0x3ff) + MIN_LOW_SURROGATE));
     }
 
     cb.flip();
     return cb;
-  }
-
-  /**
-   * Check whether a byte is ascii or the start of a multi-byte UTF-8 sequence.
-   */
-  private static boolean isAscii(final byte b) {
-    return b >= 0;
   }
 
   /**
@@ -164,5 +177,85 @@ final class Encoding {
       }
     }
     return false;
+  }
+
+  /**
+   * Decode UTF8 sequence length.
+   */
+  private static int utf8Length(int c) {
+    if (c < 0x80) {
+      // 1 byte, 7 bits: 0xxxxxxx
+      return 1;
+    } else if (c < 0xC2) {
+      // continuation or overlong 2-byte sequence
+      return INVALID;
+    } else if (c < 0xE0) {
+      // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
+      return 2;
+    } else if (c < 0xF0) {
+      // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
+      return 3;
+    } else if (c < 0xF5) {
+      // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+      return 4;
+    } else {
+      // > U+10FFFF
+      return INVALID;
+    }
+  }
+
+  /**
+   * Read a 2 byte UTF8 sequence.
+   *
+   * @return the resulting code point or {@link #INVALID} if invalid.
+   */
+  private static int utf8Read2(int cu1, int cu2) {
+    if ((cu2 & 0xC0) != 0x80) {
+      return INVALID;
+    }
+    return (cu1 << 6) + cu2 - 0x3080;
+  }
+
+  /**
+   * Read a 3 byte UTF8 sequence.
+   *
+   * @return the resulting code point or {@link #INVALID} if invalid.
+   */
+  private static int utf8Read3(int cu1, int cu2, int cu3) {
+    if ((cu2 & 0xC0) != 0x80) {
+      return INVALID;
+    }
+    if (cu1 == 0xE0 && cu2 < 0xA0) {
+      // overlong
+      return INVALID;
+    }
+    if ((cu3 & 0xC0) != 0x80) {
+      return INVALID;
+    }
+    return (cu1 << 12) + (cu2 << 6) + cu3 - 0xE2080;
+  }
+
+  /**
+   * Read a 4 byte UTF8 sequence.
+   *
+   * @return the resulting code point or {@link #INVALID} if invalid.
+   */
+  private static int utf8Read4(int cu1, int cu2, int cu3, int cu4) {
+    if ((cu2 & 0xC0) != 0x80) {
+      return INVALID;
+    }
+    if (cu1 == 0xF0 && cu2 < 0x90) {
+      return INVALID; // overlong
+    }
+    if (cu1 == 0xF4 && cu2 >= 0x90) {
+      return INVALID; // > U+10FFFF
+    }
+    if ((cu3 & 0xC0) != 0x80) {
+      return INVALID;
+    }
+    if ((cu4 & 0xC0) != 0x80) {
+      return INVALID;
+    }
+    return (cu1 << 18) + (cu2 << 12) + (cu3 << 6) + cu4 - 0x3C82080;
   }
 }
