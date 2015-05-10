@@ -7,8 +7,9 @@ import java.io.UnsupportedEncodingException;
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 import static io.norberg.rut.Encoding.decode;
 import static java.lang.Character.MAX_CODE_POINT;
+import static java.lang.Character.MAX_SURROGATE;
 import static java.lang.Character.MIN_CODE_POINT;
-import static java.lang.Character.isSurrogate;
+import static java.lang.Character.MIN_SURROGATE;
 import static java.lang.Character.toChars;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -235,5 +236,9 @@ public class EncodingTest {
       final CharSequence decoded = Encoding.decode(encoded);
       assertThat(decoded.toString(), is(s));
     }
+  }
+
+  public static boolean isSurrogate(char ch) {
+    return ch >= MIN_SURROGATE && ch < (MAX_SURROGATE + 1);
   }
 }
