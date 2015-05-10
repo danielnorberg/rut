@@ -26,6 +26,16 @@ public class RouterTest {
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
+  public void testEmptyRouter() {
+    final Router<String> router = Router.builder(String.class).build();
+    final Router.Result<String> result = router.result();
+    Router.Status status = router.route("GET", "foobar", result);
+    assertThat(status, is(NOT_FOUND));
+    assertThat(result.isSuccess(), is(false));
+    assertThat(result.status(), is(NOT_FOUND));
+  }
+
+  @Test
   public void testRouting() {
     final String getTarget = "target";
     final String postTarget = "target";
