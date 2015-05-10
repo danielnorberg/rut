@@ -22,7 +22,7 @@ final class RadixTrie<T> {
 
   RadixTrie(final Node<T> root) {
     this.root = root;
-    this.captures = root.captures();
+    this.captures = (root == null) ? 0 : root.captures();
   }
 
   T lookup(final CharSequence path) {
