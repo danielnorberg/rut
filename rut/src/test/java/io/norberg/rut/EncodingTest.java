@@ -2,7 +2,13 @@ package io.norberg.rut;
 
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+
+import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 import static io.norberg.rut.Encoding.decode;
+import static java.lang.Character.MAX_CODE_POINT;
+import static java.lang.Character.MIN_CODE_POINT;
+import static java.lang.Character.isSurrogate;
 import static java.lang.Character.toChars;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -216,5 +222,18 @@ public class EncodingTest {
     assertThat(decode(FOUR_BYTES_ENCODED_INVALID2), is(nullValue()));
     assertThat(decode(FOUR_BYTES_ENCODED_INVALID3), is(nullValue()));
     assertThat(decode(FOUR_BYTES_ENCODED_PERCENT_INVALID), is(nullValue()));
+  }
+
+  @Test
+  public void testEntireUnicodeRange() throws UnsupportedEncodingException {
+    for (int i = MIN_CODE_POINT; i < MAX_CODE_POINT; i++) {
+      if (isSurrogate((char) i)) {
+        continue;
+      }
+      final String s = String.valueOf(Character.toChars(i));
+      final String encoded = urlPathSegmentEscaper().escape(s);
+      final CharSequence decoded = Encoding.decode(encoded);
+      assertThat(decoded.toString(), is(s));
+    }
   }
 }
