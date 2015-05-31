@@ -44,4 +44,44 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.siom79.japicmp</groupId>
+        <artifactId>japicmp-maven-plugin</artifactId>
+        <version>0.5.0</version>
+        <configuration>
+          <oldVersion>
+            <dependency>
+              <groupId>io.norberg</groupId>
+              <artifactId>rut</artifactId>
+              <version>0.10</version>
+            </dependency>
+          </oldVersion>
+          <newVersion>
+            <file>
+              <path>${project.build.directory}/${project.artifactId}-${project.version}.jar</path>
+            </file>
+          </newVersion>
+          <parameter>
+            <onlyModified>true</onlyModified>
+            <accessModifier>public</accessModifier>
+            <breakBuildOnModifications>false</breakBuildOnModifications>
+            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+            <onlyBinaryIncompatible>false</onlyBinaryIncompatible>
+            <includeSynthetic>false</includeSynthetic>
+          </parameter>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>cmp</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
