@@ -8,6 +8,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
 
+import static io.norberg.rut.ParameterType.PATH;
+import static io.norberg.rut.ParameterType.SEGMENT;
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
 import static io.norberg.rut.Router.Status.NOT_FOUND;
 import static io.norberg.rut.Router.Status.SUCCESS;
@@ -417,6 +419,17 @@ public class RouterTest {
     assertFail(r, "GET", "3-f");
     assertFail(r, "GET", "4-fo_");
     assertSucc(r, "GET", "5-foo", "5", p());
+  }
+
+  @Test
+  public void testParamTypes() throws Exception {
+    final Router<String> router = Router.builder(String.class)
+        .route("GET", "/<param>/<end:path>", "")
+        .build();
+    final Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "/foobar/the/end", result), is(SUCCESS));
+    assertThat(result.paramType(0), is(SEGMENT));
+    assertThat(result.paramType(1), is(PATH));
   }
 
   private List<String> p(final String... params) {
