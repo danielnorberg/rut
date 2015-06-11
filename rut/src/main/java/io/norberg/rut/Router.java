@@ -97,10 +97,12 @@ public final class Router<T> {
 
     private final T target;
     private final String[] paramNames;
+    private final ParameterType[] paramTypes;
 
-    private Target(final T target, final String[] paramNames) {
+    private Target(final T target, final String[] paramNames, ParameterType[] paramTypes) {
       this.target = target;
       this.paramNames = paramNames;
+      this.paramTypes = paramTypes;
     }
   }
 
@@ -179,7 +181,11 @@ public final class Router<T> {
       public RouteTarget<T> finish(final RouteTarget<T> currentValue) {
         final List<String> captureNames = route.captureNames();
         final String[] paramNames = captureNames.toArray(new String[captureNames.size()]);
-        final Target<T> target = new Target<T>(this.target, paramNames);
+        final List<ParameterType> parameterTypes = route.captureParameterTypes();
+        final ParameterType[] paramTypes =
+            parameterTypes.toArray(new ParameterType[parameterTypes.size()]);
+
+        final Target<T> target = new Target<T>(this.target, paramNames, paramTypes);
         if (currentValue == null) {
           return RouteTarget.of(route.method(), target);
         }
@@ -269,6 +275,17 @@ public final class Router<T> {
      */
     public CharSequence paramValueDecoded(final int i) {
       return decode(paramValue(i));
+    }
+
+    /**
+     * Get the parameter type of the captured path parameter at index {@code i}.
+     */
+    public ParameterType paramType(final int i) {
+      if (target == null) {
+        throw new IllegalStateException("not matched");
+      }
+
+      return target.paramTypes[i];
     }
 
     /**

@@ -26,6 +26,10 @@ public final class Route {
     return path.captureNames();
   }
 
+  public List<ParameterType> captureParameterTypes() {
+    return path.captureParameterTypes();
+  }
+
   Path path() {
     return path;
   }

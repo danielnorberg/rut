@@ -5,12 +5,15 @@ import java.util.List;
 
 import static io.norberg.rut.CharSequences.indexOf;
 import static io.norberg.rut.Objects.requireNonNull;
+import static io.norberg.rut.ParameterType.PATH;
+import static io.norberg.rut.ParameterType.SEGMENT;
 import static java.util.Collections.unmodifiableList;
 
 final class Path {
 
   private final List<Part> parts;
   private final List<String> captureNames;
+  private final List<ParameterType> captureParameterTypes;
   private final String string;
 
   Path(final List<Part> parts) {
@@ -19,12 +22,21 @@ final class Path {
       throw new IllegalArgumentException();
     }
     final List<String> captureNames = new ArrayList<String>();
+    final List<ParameterType> parameterTypes = new ArrayList<ParameterType>();
     for (final Part part : parts) {
       if (part instanceof Capture) {
         captureNames.add(((Capture) part).name());
+
+        if (part instanceof CaptureSegment) {
+          parameterTypes.add(SEGMENT);
+        }
+        else {
+          parameterTypes.add(PATH);
+        }
       }
     }
     this.captureNames = unmodifiableList(captureNames);
+    this.captureParameterTypes = unmodifiableList(parameterTypes);
     this.string = join(parts);
   }
 
@@ -47,6 +59,10 @@ final class Path {
 
   static Path of(final String path) {
     return new Path(parts(path));
+  }
+
+  public List<ParameterType> captureParameterTypes() {
+    return captureParameterTypes;
   }
 
   interface Part {
