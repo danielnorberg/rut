@@ -49,13 +49,13 @@
       <plugin>
         <groupId>com.github.siom79.japicmp</groupId>
         <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.5.0</version>
+        <version>0.6.1</version>
         <configuration>
           <oldVersion>
             <dependency>
               <groupId>io.norberg</groupId>
               <artifactId>rut</artifactId>
-              <version>0.10</version>
+              <version>1.0</version>
             </dependency>
           </oldVersion>
           <newVersion>
