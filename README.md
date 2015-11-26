@@ -79,7 +79,7 @@ allowed methods: [POST, GET]
 <dependency>
   <groupId>io.norberg</groupId>
   <artifactId>rut</artifactId>
-  <version>0.11</version>
+  <version>1.0</version>
 </dependency>
 ```
 
