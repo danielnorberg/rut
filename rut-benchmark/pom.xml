@@ -9,10 +9,6 @@
 
   <artifactId>rut-benchmark</artifactId>
 
-  <properties>
-    <jmh.version>1.11.2</jmh.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.norberg</groupId>

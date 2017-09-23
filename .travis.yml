@@ -6,6 +6,7 @@ secure: "T/pDquem2Q67SiIagPgJgPxubVvBnh1fIPkj/zR0KPHZk5oCOMZu+s2x1amq2Jw57EVt6Hy
 language: java
 
 jdk:
+  - oraclejdk9
   - oraclejdk8
   - oraclejdk7
   - openjdk6

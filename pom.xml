@@ -44,7 +44,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jmh.version>1.6.1</jmh.version>
+    <jmh.version>1.19</jmh.version>
     <javac.target>1.6</javac.target>
     <coveralls.token>NMdOvhUZp5nBfOkLNcaLYau8G3jGUaSCY</coveralls.token>
   </properties>
@@ -54,7 +54,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.2</version>
+        <version>3.7.0</version>
         <configuration>
           <compilerVersion>${javac.target}</compilerVersion>
           <source>${javac.target}</source>
