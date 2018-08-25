@@ -16,9 +16,9 @@ jobs:
   include:
 
   - stage: ☕ jdk.java.net - OpenJDK - GPL
-    env: JDK='OpenJDK 7'
+    env: JDK=7
     jdk: openjdk7
-  - env: JDK='OpenJDK 8'
+  - env: JDK=8
     jdk: openjdk8
   - env: JDK=9
     script: source install-jdk.sh -F 9
@@ -30,7 +30,7 @@ jobs:
     script: source install-jdk.sh -F 12
 
   - stage: 🍰 jdk.java.net/oracle.com - Oracle JDK - BCL
-    env: JDK='Oracle JDK 8'
+    env: JDK=8
     jdk: oraclejdk8
     after_success:
       - mvn -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
