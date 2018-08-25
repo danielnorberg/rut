@@ -14,8 +14,6 @@ before_install:
 matrix:
   include:
 # 7
-    - env: JDK='Oracle JDK 7'
-      jdk: oraclejdk7
     - env: JDK='OpenJDK 7'
       jdk: openjdk7
 # 8
