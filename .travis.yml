@@ -3,16 +3,43 @@
 # travis encrypt COVERALLS_TOKEN=<the token from coveralls>
 secure: "T/pDquem2Q67SiIagPgJgPxubVvBnh1fIPkj/zR0KPHZk5oCOMZu+s2x1amq2Jw57EVt6HyLrn5hcOglM3EWKgOg/fM0nLlH5KLLd4sForqjkHNAN4ploQmaxG6bwhsh/BBsSNzQYkqX28dckoW7ZLjhVhqu7/Gr2A+7LTeGFk4="
 
+sudo: false
+dist: trusty
 language: java
 
-jdk:
-  - oraclejdk9
-  - oraclejdk8
-  - openjdk7
+before_install:
+  - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
+
+# https://sormuras.github.io/blog/2018-03-20-jdk-matrix.html
+matrix:
+  include:
+# 7
+    - env: JDK='OpenJDK 7'
+      jdk: openjdk7
+# 8
+    - env: JDK='Oracle JDK 8'
+      jdk: oraclejdk8
+      after_success:
+        - mvn -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
+    - env: JDK='OpenJDK 8'
+      jdk: openjdk8
+# 9
+    - env: JDK='Oracle JDK 9'
+      jdk: oraclejdk9
+    - env: JDK='OpenJDK 9'
+      install: . ./install-jdk.sh -F 9
+# 10
+    - env: JDK='Oracle JDK 10'
+      jdk: oraclejdk10
+    - env: JDK='OpenJDK 10'
+      install: . ./install-jdk.sh -F 10 -L GPL
+# 11
+    - env: JDK='Oracle JDK 11'
+      install: . ./install-jdk.sh -F 11 -L BCL
+    - env: JDK='OpenJDK 11'
+      install: . ./install-jdk.sh -F 11 -L GPL
 
 install: true
 
 script: mvn clean package
 
-after_success:
-  - mvn -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
