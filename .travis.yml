@@ -6,11 +6,11 @@ secure: "T/pDquem2Q67SiIagPgJgPxubVvBnh1fIPkj/zR0KPHZk5oCOMZu+s2x1amq2Jw57EVt6Hy
 sudo: false
 dist: trusty
 language: java
-jdk: oraclejdk8
 
 before_install:
 - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
-- mvn clean package
+- jdk_switcher use oraclejdk8
+- mvn -B clean package -DskipTests
 
 # https://github.com/sormuras/sormuras.github.io/blob/master/.travis.yml
 jobs:
@@ -34,7 +34,7 @@ jobs:
     env: JDK=8
     install: jdk_switcher use oraclejdk8
     after_success:
-      - mvn -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
+      - mvn -B -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
   - env: JDK=10
     install: source install-jdk.sh -F 10 -L BCL
   - env: JDK=11
