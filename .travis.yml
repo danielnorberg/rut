@@ -8,8 +8,9 @@ dist: trusty
 language: java
 
 before_install:
-- unset -v _JAVA_OPTIONS
 - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
+- jdk_switcher use oraclejdk8
+- mvn -B clean package -DskipTests
 
 # https://github.com/sormuras/sormuras.github.io/blob/master/.travis.yml
 jobs:
@@ -17,9 +18,9 @@ jobs:
 
   - stage: ☕ jdk.java.net - OpenJDK - GPL
     env: JDK=7
-    jdk: openjdk7
+    install: jdk_switcher use openjdk7
   - env: JDK=8
-    jdk: openjdk8
+    install: jdk_switcher use openjdk8
   - env: JDK=9
     install: source install-jdk.sh -F 9
   - env: JDK=10
@@ -31,9 +32,9 @@ jobs:
 
   - stage: 🍰 jdk.java.net/oracle.com - Oracle JDK - BCL
     env: JDK=8
-    jdk: oraclejdk8
+    install: jdk_switcher use oraclejdk8
     after_success:
-      - mvn -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
+      - mvn -B -pl rut clean cobertura:cobertura coveralls:report -Dcoveralls.token=${COVERALLS_TOKEN}
   - env: JDK=10
     install: source install-jdk.sh -F 10 -L BCL
   - env: JDK=11
@@ -53,7 +54,11 @@ jobs:
   - env: JDK=openjdk-shenandoah-jdk8-latest
     install: source install-jdk.sh --url  https://builds.shipilev.net/openjdk-shenandoah-jdk8/openjdk-shenandoah-jdk8-latest-x86_64-release.tar.xz
 
-install: true
+install: false
 
-script: mvn clean package
+script:
+  # Run tests on oraclejdk8 built binary
+  - mvn -B -pl rut surefire:test
+  # Rebuild and run tests using current JDK
+  - mvn -B clean package
 
