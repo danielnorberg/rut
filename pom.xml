@@ -45,9 +45,29 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jmh.version>1.19</jmh.version>
-    <javac.target>1.7</javac.target>
     <coveralls.token>NMdOvhUZp5nBfOkLNcaLYau8G3jGUaSCY</coveralls.token>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>java8</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <properties>
+        <javac.target>1.6</javac.target>
+      </properties>
+    </profile>
+    <profile>
+      <id>java9+</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <javac.target>1.7</javac.target>
+      </properties>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>
