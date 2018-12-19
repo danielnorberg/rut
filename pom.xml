@@ -50,51 +50,70 @@
 
   <profiles>
     <profile>
-      <id>java8</id>
+      <id>java-old</id>
       <activation>
-        <jdk>1.8</jdk>
+        <jdk>[1.7,1.9)</jdk>
       </activation>
-      <properties>
-        <javac.target>1.6</javac.target>
-      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+            <configuration>
+              <source>1.7</source>
+              <target>1.7</target>
+              <excludes>
+                <exclude>module-info.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>java-current</id>
+      <activation>
+        <jdk>[9,18)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+            <executions>
+              <execution>
+                <!-- compile everything for Java 9: -->
+                <id>default-compile</id>
+                <configuration>
+                  <release>9</release>
+                </configuration>
+              </execution>
+              <!--
+                  compile everything again with default configuration,
+                  which is Java 7 excluding module-info:
+              -->
+              <execution>
+                <id>base-compile</id>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>7</release>
+                  <excludes>
+                    <exclude>module-info.java</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
-          <executions>
-            <execution>
-              <!-- compile everything for Java 9: -->
-              <id>default-compile</id>
-              <configuration>
-                <release>9</release>
-              </configuration>
-            </execution>
-            <!--
-                compile everything again with default configuration,
-                which is Java 7 excluding module-info:
-            -->
-            <execution>
-              <id>base-compile</id>
-              <goals>
-                <goal>compile</goal>
-              </goals>
-              <configuration>
-                <release>7</release>
-                <excludes>
-                  <exclude>module-info.java</exclude>
-                </excludes>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
