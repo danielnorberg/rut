@@ -54,7 +54,7 @@ jobs:
   - env: JDK=zulu11.2.3-jdk11.0.1
     install: source install-jdk.sh --url https://cdn.azul.com/zulu/bin/zulu11.2.3-jdk11.0.1-linux_x64.tar.gz
   - env: JDK=openjdk-shenandoah-jdk8-latest
-    install: source install-jdk.sh --url  https://builds.shipilev.net/openjdk-shenandoah-jdk8/openjdk-shenandoah-jdk8-latest-x86_64-release.tar.xz
+    install: source install-jdk.sh --url https://builds.shipilev.net/openjdk-shenandoah-jdk8/openjdk-shenandoah-jdk8-latest-linux-x86_64-release.tar.xz
 
 install: false
 
