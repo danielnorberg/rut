@@ -6,10 +6,11 @@ secure: "T/pDquem2Q67SiIagPgJgPxubVvBnh1fIPkj/zR0KPHZk5oCOMZu+s2x1amq2Jw57EVt6Hy
 sudo: false
 dist: trusty
 language: java
+jdk:
+  - oraclejdk11
 
 before_install:
 - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
-- jdk_switcher use oraclejdk8
 - mvn -B clean package -DskipTests
 
 # https://github.com/sormuras/sormuras.github.io/blob/master/.travis.yml
@@ -57,8 +58,6 @@ jobs:
 install: false
 
 script:
-  # Run tests on oraclejdk8 built binary
+  # Run tests on oraclejdk11 built binary
   - mvn -B -pl rut surefire:test
-  # Rebuild and run tests using current JDK
-  - mvn -B clean package
 
