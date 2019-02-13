@@ -46,32 +46,51 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jmh.version>1.19</jmh.version>
     <coveralls.token>NMdOvhUZp5nBfOkLNcaLYau8G3jGUaSCY</coveralls.token>
-    <javac.target>1.7</javac.target>
   </properties>
 
-  <profiles>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-      <properties>
-        <javac.target>1.6</javac.target>
-      </properties>
-    </profile>
-  </profiles>
-
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.0</version>
+          <executions>
+            <execution>
+              <!-- compile everything for Java 9: -->
+              <id>default-compile</id>
+              <configuration>
+                <source>9</source>
+                <target>9</target>
+                <release>9</release>
+              </configuration>
+            </execution>
+            <!--
+                compile everything again with default configuration,
+                which is Java 7 excluding module-info:
+            -->
+            <execution>
+              <id>base-compile</id>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+              <configuration>
+                <release>7</release>
+                <source>7</source>
+                <target>7</target>
+                <excludes>
+                  <exclude>module-info.java</exclude>
+                </excludes>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
-        <configuration>
-          <compilerVersion>${javac.target}</compilerVersion>
-          <source>${javac.target}</source>
-          <target>${javac.target}</target>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
