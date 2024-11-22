@@ -19,8 +19,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RouterTest {
@@ -442,5 +441,26 @@ public class RouterTest {
       b.append(s);
     }
     return b.toString();
+  }
+
+  @Test
+  public void testParamByName() {
+    Router<String> router = Router.builder(String.class)
+            .route("GET", "/<param>/<end:path>", "")
+            .build();
+    Router.Result<String> result = router.result();
+    assertThat(router.route("GET", "/foobar/the/end", result), is(SUCCESS));
+    assertThat(result.paramType("param"), is(SEGMENT));
+    assertThat(result.paramType("end"), is(PATH));
+
+    router = Router.builder(String.class)
+            .route("GET", "/abc/<param>", "")
+            .build();
+    result = router.result();
+    assertThat(router.route("GET", "/abc/r%c3%A4k%20sm%C3%B6rg%C3%A5s", result), is(SUCCESS));
+    assertThat(result.paramValue("param").toString(), is("r%c3%A4k%20sm%C3%B6rg%C3%A5s"));
+    assertThat(result.paramValueDecoded("param").toString(), is("räk smörgås"));
+    assertThat(result.paramValueStart("param"), is(5));
+    assertThat(result.paramValueEnd("param"), is(33));
   }
 }
