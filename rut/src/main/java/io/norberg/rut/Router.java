@@ -1,6 +1,10 @@
 package io.norberg.rut;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.OptionalInt;
 
 import static io.norberg.rut.Encoding.decode;
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
