@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
 
 import static io.norberg.rut.Encoding.decode;
 import static io.norberg.rut.Router.Status.METHOD_NOT_ALLOWED;
@@ -306,6 +307,81 @@ public final class Router<T> {
      */
     public int paramValueEnd(final int i) {
       return captor.valueEnd(i);
+    }
+
+    /**
+     * Returns the index for a given parameter name, if it exists.
+     * @param paramName The name of the param
+     * @return An {@link OptionalInt} representing the index.
+     */
+    private OptionalInt paramIndex(String paramName) {
+      for (int i = 0; i < params(); i++) {
+        if (paramName(i).equals(paramName)) {
+          return OptionalInt.of(i);
+        }
+      }
+      return OptionalInt.empty();
+    }
+
+    /**
+     * Returns the index for a given parameter name, if it exists.
+     * @param paramName The name of the param
+     * @return An {@link OptionalInt} representing the index.
+     * @throws RuntimeException if there is no parameter for that name.
+     */
+    private int paramIndexOrThrow(String paramName) {
+      return paramIndex(paramName)
+              .orElseThrow(() -> new RuntimeException("No parameter: " + paramName));
+    }
+
+    /**
+     * Get the value of the captured path parameter.
+     *
+     * @param paramName The name of the parameter.
+     */
+    public CharSequence paramValue(final String paramName) {
+      return paramValue(paramIndexOrThrow(paramName));
+    }
+
+    /**
+     * Get the URL decoded value of the captured path parameter.
+     *
+     * @param paramName The name of the parameter.
+     * @return The decoded value or null if the encoding is invalid.
+     */
+    public CharSequence paramValueDecoded(final String paramName) {
+      return paramValueDecoded(paramIndexOrThrow(paramName));
+    }
+
+    /**
+     * Get the parameter type of the captured path parameter .
+     *
+     * @param paramName The name of the parameter.
+     */
+    public ParameterType paramType(final String paramName) {
+      return paramType(paramIndexOrThrow(paramName));
+    }
+
+    /**
+     * Get start offset into the routed path of the captured parameter.
+     *
+     * @param paramName The name of the parameter.
+     * @see #paramValue
+     * @see #paramValueEnd
+     */
+    public int paramValueStart(final String paramName) {
+      return paramValueStart(paramIndexOrThrow(paramName));
+    }
+
+    /**
+     * Get end offset into the routed path of the captured parameter.
+     *
+     * @param paramName The name of the parameter.
+     * @see #paramValue
+     * @see #paramValueStart
+     */
+    public int paramValueEnd(final String paramName) {
+      return paramValueEnd(paramIndexOrThrow(paramName));
     }
 
     /**
